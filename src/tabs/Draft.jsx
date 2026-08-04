@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { TEAMS, calcSpent, priceColor } from '../data.js'
 
-export default function DraftTab({ league, entries, onSubmit, onToast }) {
+export default function DraftTab({ league, entries, prices, played = {}, onSubmit, onToast }) {
   const [name, setName]         = useState('')
   const [picks, setPicks]       = useState([])
   const [done, setDone]         = useState(false)
@@ -12,13 +12,18 @@ export default function DraftTab({ league, entries, onSubmit, onToast }) {
   const budget    = league.budget    || 120
   const picksMin  = league.picks_min || 6
   const picksMax  = league.picks_max || 7
-  const spent     = calcSpent(picks)
+  const spent     = calcSpent(picks, prices)
   const remaining = budget - spent
+
+  function isLocked(abbr) {
+    return (played[abbr] || 0) > 0
+  }
 
   function toggle(abbr) {
     if (picks.includes(abbr)) { setPicks(picks.filter(p => p !== abbr)); return }
-    const t = TEAMS.find(x => x.abbr === abbr)
-    if (spent + t.price > budget)  return
+    if (isLocked(abbr)) return
+    const price = prices[abbr] || 0
+    if (spent + price > budget)  return
     if (picks.length >= picksMax)  return
     setPicks([...picks, abbr])
   }
@@ -27,6 +32,8 @@ export default function DraftTab({ league, entries, onSubmit, onToast }) {
     if (!name.trim())              return setError('Enter your name.')
     if (picks.length < picksMin)   return setError(`Pick at least ${picksMin} teams.`)
     if (remaining < 0)             return setError('You are over budget.')
+    const lockedPick = picks.find(a => isLocked(a))
+    if (lockedPick)                return setError(`${lockedPick} has already played and can no longer be picked. Remove it to continue.`)
     const dupe = entries.find(e => e.player_name.toLowerCase() === name.trim().toLowerCase())
     if (dupe)                      return setError('That name is already in this league.')
 
@@ -38,10 +45,13 @@ export default function DraftTab({ league, entries, onSubmit, onToast }) {
     setSubmitting(false)
   }
 
-  const filtered = TEAMS.filter(t =>
-    t.name.toLowerCase().includes(search.toLowerCase()) ||
-    t.abbr.toLowerCase().includes(search.toLowerCase())
-  )
+  const filtered = TEAMS
+    .map(t => ({ ...t, price: prices[t.abbr] ?? t.price }))
+    .filter(t =>
+      t.name.toLowerCase().includes(search.toLowerCase()) ||
+      t.abbr.toLowerCase().includes(search.toLowerCase())
+    )
+    .sort((a, b) => b.price - a.price)
 
   if (done) return (
     <div style={{ textAlign:'center', padding:'70px 20px' }}>
@@ -50,10 +60,10 @@ export default function DraftTab({ league, entries, onSubmit, onToast }) {
       <p style={{ color:'#64748b', marginBottom:24 }}>Check the Leaderboard once the season kicks off.</p>
       <div style={{ display:'flex', flexWrap:'wrap', justifyContent:'center', gap:8, marginBottom:28 }}>
         {picks.map(a => {
-          const t = TEAMS.find(x => x.abbr === a)
+          const price = prices[a] || 0
           return (
             <span key={a} style={{ background:'#0c1421', border:'1px solid #16a34a', borderRadius:8, padding:'6px 14px', fontFamily:'monospace', fontWeight:700, fontSize:13, color:'#4ade80' }}>
-              {a} <span style={{ color:priceColor(t?.price||0) }}>${t?.price}</span>
+              {a} <span style={{ color:priceColor(price) }}>${price}</span>
             </span>
           )
         })}
@@ -68,8 +78,11 @@ export default function DraftTab({ league, entries, onSubmit, onToast }) {
   return (
     <div>
       <h2 style={{ color:'#f1f5f9', fontSize:22, fontWeight:900, marginBottom:6 }}>📝 Draft Your Teams</h2>
-      <p style={{ color:'#475569', fontSize:13, marginBottom:22 }}>
+      <p style={{ color:'#94a3b8', fontSize:13, marginBottom:8 }}>
         Pick {picksMin}–{picksMax} teams within your ${budget} budget. Lower cost = bigger upset potential.
+      </p>
+      <p style={{ color:'#fbbf24', fontSize:12, marginBottom:22, background:'#1f1a0a', border:'1px solid #3f2f0a', borderRadius:8, padding:'8px 12px' }}>
+        🔒 Once a team plays its first game of the season, it locks and can no longer be picked.
       </p>
 
       {/* Name input */}
@@ -80,12 +93,12 @@ export default function DraftTab({ league, entries, onSubmit, onToast }) {
       {/* Budget bar */}
       <div style={{ background:'#0a0f18', border:'1px solid #111827', borderRadius:12, padding:'14px 18px', marginBottom:16, display:'flex', gap:28, alignItems:'center', flexWrap:'wrap' }}>
         <div>
-          <div style={{ fontSize:10, color:'#334155', fontWeight:700, letterSpacing:1 }}>BUDGET LEFT</div>
+          <div style={{ fontSize:10, color:'#64748b', fontWeight:700, letterSpacing:1 }}>BUDGET LEFT</div>
           <div style={{ fontFamily:'monospace', fontWeight:900, fontSize:30, color:remaining<0?'#ef4444':remaining<15?'#fbbf24':'#4ade80', lineHeight:1.1 }}>${remaining}</div>
         </div>
         <div>
-          <div style={{ fontSize:10, color:'#334155', fontWeight:700, letterSpacing:1 }}>PICKS</div>
-          <div style={{ fontFamily:'monospace', fontWeight:900, fontSize:30, color:'#f1f5f9', lineHeight:1.1 }}>{picks.length}<span style={{ fontSize:15, color:'#334155' }}>/{picksMax}</span></div>
+          <div style={{ fontSize:10, color:'#64748b', fontWeight:700, letterSpacing:1 }}>PICKS</div>
+          <div style={{ fontFamily:'monospace', fontWeight:900, fontSize:30, color:'#f1f5f9', lineHeight:1.1 }}>{picks.length}<span style={{ fontSize:15, color:'#64748b' }}>/{picksMax}</span></div>
         </div>
         <div style={{ flex:1, minWidth:120 }}>
           <div style={{ background:'#1a2332', borderRadius:99, height:7, overflow:'hidden' }}>
@@ -96,25 +109,22 @@ export default function DraftTab({ league, entries, onSubmit, onToast }) {
               transition:'width 0.25s',
             }} />
           </div>
-          <div style={{ fontSize:11, color:'#334155', marginTop:4 }}>${budget-remaining} of ${budget} spent</div>
+          <div style={{ fontSize:11, color:'#64748b', marginTop:4 }}>${budget-remaining} of ${budget} spent</div>
         </div>
       </div>
 
       {/* Selected picks */}
       {picks.length > 0 && (
         <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginBottom:14 }}>
-          {picks.map(abbr => {
-            const t = TEAMS.find(x => x.abbr === abbr)
-            return (
-              <button key={abbr} onClick={() => toggle(abbr)} style={{
-                background:'#14532d', border:'1px solid #16a34a', borderRadius:99,
-                padding:'5px 12px', color:'#4ade80', cursor:'pointer', fontSize:12, fontWeight:700,
-                fontFamily:'inherit', display:'flex', alignItems:'center', gap:6,
-              }}>
-                {abbr} <span style={{ color:'#86efac' }}>${t?.price}</span> ✕
-              </button>
-            )
-          })}
+          {picks.map(abbr => (
+            <button key={abbr} onClick={() => toggle(abbr)} style={{
+              background:'#14532d', border:'1px solid #16a34a', borderRadius:99,
+              padding:'5px 12px', color:'#4ade80', cursor:'pointer', fontSize:12, fontWeight:700,
+              fontFamily:'inherit', display:'flex', alignItems:'center', gap:6,
+            }}>
+              {abbr} <span style={{ color:'#86efac' }}>${prices[abbr]||0}</span> ✕
+            </button>
+          ))}
         </div>
       )}
 
@@ -127,20 +137,24 @@ export default function DraftTab({ league, entries, onSubmit, onToast }) {
       <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(168px,1fr))', gap:7, marginBottom:20 }}>
         {filtered.map(team => {
           const sel = picks.includes(team.abbr)
-          const dis = !sel && (spent + team.price > budget || picks.length >= picksMax)
+          const locked = isLocked(team.abbr)
+          const dis = !sel && (locked || spent + team.price > budget || picks.length >= picksMax)
           return (
             <button key={team.abbr} onClick={() => !dis && toggle(team.abbr)} style={{
               background:sel?'#14532d':dis?'#07090e':'#0a0f18',
-              border:`1px solid ${sel?'#16a34a':'#111827'}`,
+              border:`1px solid ${sel?'#16a34a':locked?'#3f1d1d':'#111827'}`,
               borderRadius:10, padding:'11px 14px', cursor:dis?'not-allowed':'pointer',
-              textAlign:'left', opacity:dis?0.3:1, transition:'all 0.1s',
-              fontFamily:'inherit',
+              textAlign:'left', opacity:dis?(locked?0.5:0.3):1, transition:'all 0.1s',
+              fontFamily:'inherit', position:'relative',
             }}>
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:3 }}>
                 <span style={{ fontWeight:800, fontSize:13, color:sel?'#4ade80':'#e2e8f0', fontFamily:'monospace' }}>{team.abbr}</span>
                 <span style={{ fontWeight:900, fontSize:15, fontFamily:'monospace', color:priceColor(team.price) }}>${team.price}</span>
               </div>
-              <div style={{ fontSize:11, color:sel?'#86efac':'#334155', lineHeight:1.3 }}>{team.name}</div>
+              <div style={{ fontSize:11, color:sel?'#86efac':'#94a3b8', lineHeight:1.3 }}>{team.name}</div>
+              {locked && (
+                <div style={{ fontSize:10, color:'#f87171', fontWeight:700, marginTop:4 }}>🔒 Already played</div>
+              )}
             </button>
           )
         })}
@@ -153,7 +167,7 @@ export default function DraftTab({ league, entries, onSubmit, onToast }) {
           width:'100%', borderRadius:12, padding:'14px',
           fontSize:15, fontWeight:800, border:'none', fontFamily:'inherit',
           background:(picks.length>=picksMin && remaining>=0 && !submitting)?'#16a34a':'#0c1421',
-          color:(picks.length>=picksMin && remaining>=0 && !submitting)?'#fff':'#334155',
+          color:(picks.length>=picksMin && remaining>=0 && !submitting)?'#fff':'#64748b',
           cursor:(picks.length>=picksMin && remaining>=0 && !submitting)?'pointer':'not-allowed',
           transition:'background 0.2s',
         }}>

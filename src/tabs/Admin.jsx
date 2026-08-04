@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { TEAMS, calcScore, calcSpent, priceColor } from '../data.js'
 import { Btn, Card } from '../components.jsx'
 
-export default function AdminTab({ entries, wins, league, onDelete, onWinUpdate, onRefresh, refreshing, onToast }) {
+export default function AdminTab({ entries, wins, prices, league, onDelete, onWinUpdate, onRefresh, refreshing, onToast }) {
   const [view, setView]       = useState('entries')
   const [winEdits, setWinEdits] = useState({})
   const [addName, setAddName] = useState('')
@@ -34,7 +34,7 @@ export default function AdminTab({ entries, wins, league, onDelete, onWinUpdate,
 
       {view==='entries' && (
         <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-          {sorted.length===0 && <p style={{ color:'#334155', textAlign:'center', padding:'40px 0' }}>No entries yet.</p>}
+          {sorted.length===0 && <p style={{ color:'#64748b', textAlign:'center', padding:'40px 0' }}>No entries yet.</p>}
           {sorted.map(entry => (
             <div key={entry.id} style={{
               background:'#0a0f18', border:'1px solid #111827', borderRadius:10,
@@ -44,19 +44,19 @@ export default function AdminTab({ entries, wins, league, onDelete, onWinUpdate,
                 <div style={{ fontWeight:800, color:'#e2e8f0', fontSize:14, marginBottom:8 }}>{entry.player_name}</div>
                 <div style={{ display:'flex', flexWrap:'wrap', gap:5 }}>
                   {entry.picks.map(abbr => {
-                    const t = TEAMS.find(x => x.abbr===abbr)
+                    const price = prices[abbr] || 0
                     const w = wins[abbr] || 0
                     return (
                       <span key={abbr} style={{ background:'#0c1421', border:'1px solid #1a2332', borderRadius:5, padding:'2px 8px', fontFamily:'monospace', fontSize:11, fontWeight:700 }}>
                         <span style={{ color:'#94a3b8' }}>{abbr}</span>
-                        {' '}<span style={{ color:priceColor(t?.price||0) }}>${t?.price}</span>
-                        {' '}<span style={{ color:w>0?'#4ade80':'#334155' }}>{w}W</span>
+                        {' '}<span style={{ color:priceColor(price) }}>${price}</span>
+                        {' '}<span style={{ color:w>0?'#4ade80':'#64748b' }}>{w}W</span>
                       </span>
                     )
                   })}
                 </div>
-                <div style={{ fontSize:11, color:'#334155', marginTop:6 }}>
-                  ${calcSpent(entry.picks)} spent · {calcScore(entry.picks, wins)} wins
+                <div style={{ fontSize:11, color:'#64748b', marginTop:6 }}>
+                  ${calcSpent(entry.picks, prices)} spent · {calcScore(entry.picks, wins)} wins
                 </div>
               </div>
               <button
@@ -74,7 +74,7 @@ export default function AdminTab({ entries, wins, league, onDelete, onWinUpdate,
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16, flexWrap:'wrap', gap:10 }}>
             <div>
               <p style={{ color:'#64748b', fontSize:13, marginBottom:4 }}>ESPN auto-sync is the primary source. Use this to manually correct individual teams.</p>
-              <p style={{ color:'#334155', fontSize:12 }}>Changes here update wins for <strong style={{ color:'#94a3b8' }}>all leagues</strong> — wins are shared platform-wide.</p>
+              <p style={{ color:'#64748b', fontSize:12 }}>Changes here update wins for <strong style={{ color:'#94a3b8' }}>all leagues</strong> — wins are shared platform-wide.</p>
             </div>
             <Btn onClick={onRefresh} disabled={refreshing} size='sm'>
               {refreshing ? '⟳ Syncing…' : '⟳ ESPN Auto-Sync'}

@@ -76,13 +76,13 @@ export default function Home({ onNavigate }) {
             </Btn>
           </div>
           {error && <p style={{ color:'#f87171', fontSize:13, marginTop:10 }}>{error}</p>}
-          <p style={{ color:'#334155', fontSize:12, marginTop:12 }}>Got a code from your organizer? Enter it above.</p>
+          <p style={{ color:'#64748b', fontSize:12, marginTop:12 }}>Got a code from your organizer? Enter it above.</p>
         </div>
       </div>
 
       {/* GAME CATALOG */}
       <div style={{ maxWidth:960, margin:'0 auto', padding:'0 24px 100px' }}>
-        <div style={{ color:'#334155', fontSize:11, fontWeight:700, letterSpacing:2, marginBottom:20 }}>GAMES</div>
+        <div style={{ color:'#64748b', fontSize:11, fontWeight:700, letterSpacing:2, marginBottom:20 }}>GAMES</div>
         <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(260px,1fr))', gap:16 }}>
 
           {/* BANKROLL — LIVE */}
@@ -115,8 +115,8 @@ export default function Home({ onNavigate }) {
           {['Survivor Pool', 'Confidence Picks', 'Squares'].map(name => (
             <div key={name} style={{ background:'#080d14', border:'1px solid #111827', borderRadius:18, padding:26, opacity:0.45 }}>
               <div style={{ fontSize:40, marginBottom:14 }}>🔒</div>
-              <div style={{ fontWeight:900, fontSize:22, color:'#475569', marginBottom:8 }}>{name}</div>
-              <p style={{ color:'#1e293b', fontSize:13 }}>Coming soon to Getlucki Games</p>
+              <div style={{ fontWeight:900, fontSize:22, color:'#94a3b8', marginBottom:8 }}>{name}</div>
+              <p style={{ color:'#64748b', fontSize:13 }}>Coming soon to Getlucki Games</p>
             </div>
           ))}
         </div>

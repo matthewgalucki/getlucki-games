@@ -1,20 +1,23 @@
 import { useState, useEffect } from 'react'
 import { globalStyles } from './components.jsx'
-import Home   from './screens/Home.jsx'
-import Create from './screens/Create.jsx'
-import League from './screens/League.jsx'
+import Home        from './screens/Home.jsx'
+import Create      from './screens/Create.jsx'
+import League      from './screens/League.jsx'
+import MasterAdmin from './screens/MasterAdmin.jsx'
 
 export default function App() {
   const [screen, setScreen]       = useState('home')
   const [leagueId, setLeagueId]   = useState(null)
   const [leagueMeta, setLeagueMeta] = useState({})
 
-  // Handle ?join=CODE deep links
+  // Handle ?join=CODE and ?admin=rankings deep links
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const joinCode = params.get('join')
-    if (joinCode) {
-      // We'll pass the code to home which will redirect
+    const admin = params.get('admin')
+    if (admin === 'rankings') {
+      setScreen('master')
+    } else if (joinCode) {
       setScreen('join')
       setLeagueId(joinCode.toUpperCase())
     }
@@ -50,11 +53,12 @@ export default function App() {
       <style>{globalStyles}</style>
       {screen === 'home'   && <Home   onNavigate={navigate} />}
       {screen === 'join'   && (
-        <div style={{ minHeight:'100vh', background:'#060d16', display:'flex', alignItems:'center', justifyContent:'center', color:'#475569', fontSize:14 }}>
+        <div style={{ minHeight:'100vh', background:'#060d16', display:'flex', alignItems:'center', justifyContent:'center', color:'#94a3b8', fontSize:14 }}>
           Joining league…
         </div>
       )}
       {screen === 'create' && <Create onNavigate={navigate} />}
+      {screen === 'master' && <MasterAdmin onNavigate={navigate} />}
       {screen === 'league' && <League leagueId={leagueId} initMeta={leagueMeta} onNavigate={navigate} />}
     </>
   )

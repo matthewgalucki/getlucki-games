@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { TEAMS, priceColor, pctTaken } from '../data.js'
 
-export default function TeamsTab({ wins, entries }) {
+export default function TeamsTab({ wins, entries, prices }) {
   const [sort, setSort] = useState('price')
 
-  const sorted = [...TEAMS].sort((a, b) => {
+  const teams = TEAMS.map(t => ({ ...t, price: prices[t.abbr] ?? t.price }))
+  const sorted = [...teams].sort((a, b) => {
     if (sort === 'price') return b.price - a.price
     if (sort === 'wins')  return (wins[b.abbr]||0) - (wins[a.abbr]||0)
     if (sort === 'taken') return pctTaken(b.abbr, entries) - pctTaken(a.abbr, entries)
@@ -16,7 +17,7 @@ export default function TeamsTab({ wins, entries }) {
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
         <div>
           <h2 style={{ color:'#f1f5f9', fontSize:22, fontWeight:900, marginBottom:4 }}>🏈 All 32 Teams</h2>
-          <p style={{ color:'#475569', fontSize:12 }}>Current prices, win totals, and draft popularity</p>
+          <p style={{ color:'#94a3b8', fontSize:12 }}>Current prices, win totals, and draft popularity</p>
         </div>
         <select value={sort} onChange={e => setSort(e.target.value)} style={{
           background:'#0c1421', border:'1px solid #1a2332', borderRadius:8,
@@ -28,7 +29,7 @@ export default function TeamsTab({ wins, entries }) {
         </select>
       </div>
 
-      <div style={{ display:'grid', gridTemplateColumns:'48px 1fr 52px 54px 58px', gap:4, padding:'4px 14px 10px', color:'#334155', fontSize:11, fontWeight:700 }}>
+      <div style={{ display:'grid', gridTemplateColumns:'48px 1fr 52px 54px 58px', gap:4, padding:'4px 14px 10px', color:'#64748b', fontSize:11, fontWeight:700 }}>
         <span>$</span><span>TEAM</span>
         <span style={{textAlign:'right'}}>WINS</span>
         <span style={{textAlign:'right'}}>TAKEN</span>
@@ -49,11 +50,11 @@ export default function TeamsTab({ wins, entries }) {
               <span style={{ fontWeight:900, fontFamily:'monospace', fontSize:16, color:priceColor(team.price) }}>${team.price}</span>
               <div>
                 <div style={{ fontWeight:700, fontSize:13, color:'#e2e8f0', fontFamily:'monospace' }}>{team.abbr}</div>
-                <div style={{ fontSize:10, color:'#1e293b', marginTop:1 }}>{team.name}</div>
+                <div style={{ fontSize:10, color:'#64748b', marginTop:1 }}>{team.name}</div>
               </div>
               <div style={{ textAlign:'right', fontFamily:'monospace', fontWeight:800, fontSize:16, color:w>0?'#4ade80':'#1e293b' }}>{w}</div>
-              <div style={{ textAlign:'right', fontSize:12, color:'#475569' }}>{pct}%</div>
-              <div style={{ textAlign:'right', fontFamily:'monospace', fontSize:12, color:'#334155' }}>{cpw}</div>
+              <div style={{ textAlign:'right', fontSize:12, color:'#94a3b8' }}>{pct}%</div>
+              <div style={{ textAlign:'right', fontFamily:'monospace', fontSize:12, color:'#64748b' }}>{cpw}</div>
             </div>
           )
         })}

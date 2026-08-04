@@ -15,7 +15,7 @@ export default function ShareTab({ league }) {
   return (
     <div>
       <h2 style={{ color:'#f1f5f9', fontSize:22, fontWeight:900, marginBottom:6 }}>📣 Share Your League</h2>
-      <p style={{ color:'#475569', fontSize:13, marginBottom:28, lineHeight:1.6 }}>
+      <p style={{ color:'#94a3b8', fontSize:13, marginBottom:28, lineHeight:1.6 }}>
         Send players the join code or link. For bars — print the QR code and stick it on the table or the TV!
       </p>
 
@@ -35,11 +35,11 @@ export default function ShareTab({ league }) {
 
       {/* QR code */}
       <Card style={{ textAlign:'center', marginBottom:16 }}>
-        <div style={{ fontSize:11, color:'#475569', fontWeight:700, letterSpacing:2, marginBottom:16 }}>QR CODE — SCAN TO JOIN</div>
+        <div style={{ fontSize:11, color:'#94a3b8', fontWeight:700, letterSpacing:2, marginBottom:16 }}>QR CODE — SCAN TO JOIN</div>
         <div style={{ display:'flex', justifyContent:'center', marginBottom:14 }}>
           <QRCode url={joinUrl} size={200} />
         </div>
-        <p style={{ color:'#334155', fontSize:12 }}>
+        <p style={{ color:'#64748b', fontSize:12 }}>
           Print this for bars, restaurants, or your group chat
         </p>
       </Card>
@@ -47,7 +47,7 @@ export default function ShareTab({ league }) {
       {/* Direct link */}
       <Card style={{ display:'flex', justifyContent:'space-between', alignItems:'center', gap:12, flexWrap:'wrap', marginBottom:16 }}>
         <div>
-          <div style={{ fontSize:11, color:'#334155', fontWeight:700, letterSpacing:1, marginBottom:5 }}>DIRECT LINK</div>
+          <div style={{ fontSize:11, color:'#64748b', fontWeight:700, letterSpacing:1, marginBottom:5 }}>DIRECT LINK</div>
           <div style={{ fontFamily:'monospace', fontSize:13, color:'#4ade80', wordBreak:'break-all' }}>{joinUrl}</div>
         </div>
         <Btn variant='secondary' size='sm' onClick={() => copy(joinUrl, 'link')}>
@@ -57,7 +57,7 @@ export default function ShareTab({ league }) {
 
       {/* League info */}
       <Card>
-        <div style={{ fontSize:11, color:'#334155', fontWeight:700, letterSpacing:1, marginBottom:12 }}>LEAGUE INFO</div>
+        <div style={{ fontSize:11, color:'#64748b', fontWeight:700, letterSpacing:1, marginBottom:12 }}>LEAGUE INFO</div>
         {[
           ['League',      league.name],
           ['Organizer',   league.organizer_name],
@@ -66,7 +66,7 @@ export default function ShareTab({ league }) {
           ['Leaderboard', league.is_public ? '🟢 Public' : '🔴 Private'],
         ].map(([label, val]) => (
           <div key={label} style={{ display:'flex', justifyContent:'space-between', padding:'7px 0', borderBottom:'1px solid #111827' }}>
-            <span style={{ fontSize:13, color:'#475569' }}>{label}</span>
+            <span style={{ fontSize:13, color:'#94a3b8' }}>{label}</span>
             <span style={{ fontSize:13, color:'#94a3b8', fontWeight:600 }}>{val}</span>
           </div>
         ))}

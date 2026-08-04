@@ -21,7 +21,7 @@ export function Medal({ rank }) {
   if (rank === 1) return <span style={{ fontSize:18 }}>🥇</span>
   if (rank === 2) return <span style={{ fontSize:18 }}>🥈</span>
   if (rank === 3) return <span style={{ fontSize:18 }}>🥉</span>
-  return <span style={{ color:'#475569', fontWeight:700, fontSize:13, width:20, textAlign:'center', display:'inline-block' }}>{rank}</span>
+  return <span style={{ color:'#94a3b8', fontWeight:700, fontSize:13, width:20, textAlign:'center', display:'inline-block' }}>{rank}</span>
 }
 
 export function TeamChip({ abbr, wins }) {
@@ -36,7 +36,7 @@ export function TeamChip({ abbr, wins }) {
       {abbr}
       <span style={{
         background: w > 0 ? '#15803d' : '#1e293b',
-        color: w > 0 ? '#86efac' : '#475569',
+        color: w > 0 ? '#86efac' : '#94a3b8',
         borderRadius:3, padding:'0 4px', fontSize:10,
       }}>{w}W</span>
     </span>
@@ -66,7 +66,7 @@ export function Toggle({ value, onChange }) {
 export function Input({ label, ...props }) {
   return (
     <div style={{ marginBottom:16 }}>
-      {label && <label style={{ display:'block', fontSize:11, fontWeight:700, color:'#475569', letterSpacing:1, marginBottom:6 }}>{label}</label>}
+      {label && <label style={{ display:'block', fontSize:11, fontWeight:700, color:'#94a3b8', letterSpacing:1, marginBottom:6 }}>{label}</label>}
       <input
         {...props}
         style={{
@@ -84,7 +84,7 @@ export function Btn({ children, variant='primary', size='md', disabled, ...props
   const bg = variant==='primary' ? (disabled?'#1e293b':'#16a34a')
            : variant==='danger'  ? '#450a0a'
            : '#0c1421'
-  const color = variant==='primary' ? (disabled?'#334155':'#fff')
+  const color = variant==='primary' ? (disabled?'#64748b':'#fff')
               : variant==='danger'  ? '#fca5a5'
               : '#94a3b8'
   const pad = size==='sm' ? '6px 14px' : size==='lg' ? '14px 28px' : '9px 20px'
@@ -93,7 +93,7 @@ export function Btn({ children, variant='primary', size='md', disabled, ...props
       disabled={disabled}
       {...props}
       style={{
-        background:bg, color, border:variant==='secondary'?'1px solid #334155':'none',
+        background:bg, color, border:variant==='secondary'?'1px solid #64748b':'none',
         borderRadius:99, padding:pad, fontWeight:700,
         cursor:disabled?'not-allowed':'pointer', fontSize:size==='sm'?12:14,
         transition:'background 0.15s', fontFamily:'inherit',

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../supabase.js'
-import { TEAMS, VIETRI_ENTRIES, calcScore, calcSpent, priceColor, pctTaken, fetchNFLWins } from '../data.js'
+import { TEAMS, VIETRI_ENTRIES, calcScore, calcSpent, priceColor, pctTaken, fetchNFLWins, leaguePrices, teamsWithPrices } from '../data.js'
 import { Toast, Medal, QRCode, Btn, Card, Input } from '../components.jsx'
 import Leaderboard from '../tabs/Leaderboard.jsx'
 import TeamsTab    from '../tabs/Teams.jsx'
@@ -14,6 +14,7 @@ export default function League({ leagueId, initMeta = {}, onNavigate }) {
   const [league, setLeague]       = useState(null)
   const [entries, setEntries]     = useState([])
   const [wins, setWins]           = useState({})
+  const [played, setPlayed]       = useState({})
   const [tab, setTab]             = useState('Leaderboard')
   const [isOrganizer, setIsOrg]   = useState(initMeta.isOrganizer || false)
   const [loading, setLoading]     = useState(true)
@@ -41,8 +42,10 @@ export default function League({ leagueId, initMeta = {}, onNavigate }) {
     if (entryData) setEntries(entryData.map(e => ({ ...e, picks: Array.isArray(e.picks) ? e.picks : JSON.parse(e.picks) })))
     if (winData) {
       const w = {}
-      winData.forEach(r => { w[r.abbr] = r.wins })
+      const p = {}
+      winData.forEach(r => { w[r.abbr] = r.wins; p[r.abbr] = r.games_played || 0 })
       setWins(w)
+      setPlayed(p)
     }
     setLoading(false)
   }
@@ -68,10 +71,17 @@ export default function League({ leagueId, initMeta = {}, onNavigate }) {
     setRefreshing(true)
     const live = await fetchNFLWins()
     if (live) {
-      const rows = Object.entries(live).map(([abbr, w]) => ({ abbr, wins:w, last_synced:new Date().toISOString() }))
+      const { wins: liveWins, played: livePlayed } = live
+      const rows = Object.keys(liveWins).map(abbr => ({
+        abbr,
+        wins: liveWins[abbr],
+        games_played: livePlayed[abbr] || 0,
+        last_synced: new Date().toISOString(),
+      }))
       const { error } = await supabase.from('team_wins').upsert(rows, { onConflict:'abbr' })
       if (!error) {
-        setWins(live)
+        setWins(liveWins)
+        setPlayed(livePlayed)
         setLastSynced(new Date().toLocaleString())
         setToast('Wins synced from ESPN ✓')
       } else {
@@ -115,7 +125,7 @@ export default function League({ leagueId, initMeta = {}, onNavigate }) {
   }
 
   if (loading) return (
-    <div style={{ minHeight:'100vh', background:'#060d16', display:'flex', alignItems:'center', justifyContent:'center', color:'#475569', fontSize:14 }}>
+    <div style={{ minHeight:'100vh', background:'#060d16', display:'flex', alignItems:'center', justifyContent:'center', color:'#94a3b8', fontSize:14 }}>
       <div style={{ textAlign:'center' }}>
         <div style={{ fontSize:40, marginBottom:12, animation:'spin 1s linear infinite', display:'inline-block' }}>⟳</div>
         <div>Loading league…</div>
@@ -131,6 +141,7 @@ export default function League({ leagueId, initMeta = {}, onNavigate }) {
     </div>
   )
 
+  const prices = leaguePrices(league)
   const TABS = ['Leaderboard','Teams','Draft','Share', ...(isOrganizer ? ['Admin'] : [])]
 
   return (
@@ -142,7 +153,7 @@ export default function League({ leagueId, initMeta = {}, onNavigate }) {
         <div style={{ maxWidth:960, margin:'0 auto' }}>
           <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:14, flexWrap:'wrap', gap:10 }}>
             <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-              <button onClick={() => onNavigate('home')} style={{ background:'none', border:'none', color:'#334155', cursor:'pointer', fontSize:20, padding:0, lineHeight:1 }}>←</button>
+              <button onClick={() => onNavigate('home')} style={{ background:'none', border:'none', color:'#64748b', cursor:'pointer', fontSize:20, padding:0, lineHeight:1 }}>←</button>
               <div>
                 <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:2 }}>
                   <span style={{ fontSize:13 }}>💰</span>
@@ -152,7 +163,7 @@ export default function League({ leagueId, initMeta = {}, onNavigate }) {
               </div>
             </div>
             <div style={{ textAlign:'right' }}>
-              <div style={{ fontSize:10, color:'#334155', fontWeight:700, letterSpacing:1 }}>JOIN CODE</div>
+              <div style={{ fontSize:10, color:'#64748b', fontWeight:700, letterSpacing:1 }}>JOIN CODE</div>
               <div style={{ fontFamily:'monospace', fontWeight:900, fontSize:22, color:'#4ade80', letterSpacing:4 }}>{league.join_code}</div>
             </div>
           </div>
@@ -162,7 +173,7 @@ export default function League({ leagueId, initMeta = {}, onNavigate }) {
               <button key={t} onClick={() => setTab(t)} style={{
                 background:tab===t?'#060d16':'transparent',
                 border:'none', borderBottom:tab===t?'2px solid #16a34a':'2px solid transparent',
-                color:tab===t?'#f1f5f9':'#475569',
+                color:tab===t?'#f1f5f9':'#94a3b8',
                 padding:'9px 18px', cursor:'pointer', fontWeight:700, fontSize:13,
                 borderRadius:'6px 6px 0 0', whiteSpace:'nowrap', transition:'color 0.1s',
               }}>
@@ -178,18 +189,18 @@ export default function League({ leagueId, initMeta = {}, onNavigate }) {
 
       {/* CONTENT */}
       <div style={{ maxWidth:960, margin:'0 auto', padding:'28px 20px 80px' }}>
-        {tab==='Leaderboard' && <Leaderboard entries={entries} wins={wins} lastSynced={lastSynced} onRefresh={refreshWins} refreshing={refreshing} />}
-        {tab==='Teams'       && <TeamsTab wins={wins} entries={entries} />}
-        {tab==='Draft'       && <DraftTab league={league} entries={entries} onSubmit={submitEntry} onToast={setToast} />}
+        {tab==='Leaderboard' && <Leaderboard entries={entries} wins={wins} prices={prices} lastSynced={lastSynced} onRefresh={refreshWins} refreshing={refreshing} />}
+        {tab==='Teams'       && <TeamsTab wins={wins} entries={entries} prices={prices} />}
+        {tab==='Draft'       && <DraftTab league={league} entries={entries} prices={prices} played={played} onSubmit={submitEntry} onToast={setToast} />}
         {tab==='Share'       && <ShareTab league={league} />}
         {tab==='Admin'       && (
           isOrganizer
-            ? <AdminTab entries={entries} wins={wins} league={league} onDelete={deleteEntry} onWinUpdate={manualWinUpdate} onRefresh={refreshWins} refreshing={refreshing} onToast={setToast} />
+            ? <AdminTab entries={entries} wins={wins} prices={prices} league={league} onDelete={deleteEntry} onWinUpdate={manualWinUpdate} onRefresh={refreshWins} refreshing={refreshing} onToast={setToast} />
             : (
               <div style={{ maxWidth:360, margin:'60px auto', textAlign:'center' }}>
                 <div style={{ fontSize:48, marginBottom:12 }}>🔐</div>
                 <h2 style={{ color:'#f1f5f9', marginBottom:8, fontWeight:900 }}>Organizer Access</h2>
-                <p style={{ color:'#475569', fontSize:13, marginBottom:24 }}>Enter your organizer password to manage this league.</p>
+                <p style={{ color:'#94a3b8', fontSize:13, marginBottom:24 }}>Enter your organizer password to manage this league.</p>
                 <input type="password" value={orgPw} onChange={e => setOrgPw(e.target.value)}
                   placeholder="Password" onKeyDown={e => e.key==='Enter' && tryOrgAuth()}
                   style={{ width:'100%', background:'#0c1421', border:'1px solid #1a2332', borderRadius:10, padding:'11px 14px', color:'#f1f5f9', fontSize:14, outline:'none', boxSizing:'border-box', marginBottom:10, fontFamily:'inherit' }}

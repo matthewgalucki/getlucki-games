@@ -85,12 +85,44 @@ export const VIETRI_ENTRIES = [
   { player_name:'Michael Zowine (2)',   picks:['PHI','BUF','BAL','SF','CAR','NYG','TEN'] },
 ]
 
+// Convert a ranking order (array of abbrs, best first) into a price map.
+// Rank 1 (index 0) = $32, rank 32 (index 31) = $1.
+export function ranksToPrice(orderedAbbrs) {
+  const n = orderedAbbrs.length
+  const prices = {}
+  orderedAbbrs.forEach((abbr, i) => { prices[abbr] = n - i })
+  return prices
+}
+
+// The hardcoded fallback price map (used if a league has no snapshot).
+export const DEFAULT_PRICES = TEAMS.reduce((acc, t) => { acc[t.abbr] = t.price; return acc }, {})
+
+// Hardcoded fallback ranking order (best first), derived from TEAMS prices.
+export const DEFAULT_ORDER = [...TEAMS].sort((a, b) => b.price - a.price).map(t => t.abbr)
+
+// Resolve the active price map for a league: its frozen snapshot, or the default.
+export function leaguePrices(league) {
+  if (league?.team_prices && Object.keys(league.team_prices).length === 32) {
+    return league.team_prices
+  }
+  return DEFAULT_PRICES
+}
+
+// Build a teams array (with names/conf) using a given price map, sorted high→low.
+export function teamsWithPrices(priceMap) {
+  return TEAMS
+    .map(t => ({ ...t, price: priceMap[t.abbr] ?? t.price }))
+    .sort((a, b) => b.price - a.price)
+}
+
 export function calcScore(picks, wins) {
   return picks.reduce((s, a) => s + (wins[a] || 0), 0)
 }
 
-export function calcSpent(picks) {
+// calcSpent now takes an optional price map; falls back to hardcoded TEAMS prices.
+export function calcSpent(picks, priceMap = null) {
   return picks.reduce((s, a) => {
+    if (priceMap) return s + (priceMap[a] || 0)
     const t = TEAMS.find(x => x.abbr === a)
     return s + (t ? t.price : 0)
   }, 0)
@@ -123,14 +155,22 @@ export async function fetchNFLWins() {
     if (!res.ok) throw new Error()
     const data = await res.json()
     const wins = {}
+    const played = {}
     ;(data.children || []).forEach(conf => {
       ;(conf.standings?.entries || []).forEach(entry => {
         const abbr = entry.team?.abbreviation
-        const w = (entry.stats || []).find(s => s.name === 'wins')
-        if (abbr && w) wins[abbr] = parseInt(w.value, 10) || 0
+        const stats = entry.stats || []
+        const w = stats.find(s => s.name === 'wins')
+        const l = stats.find(s => s.name === 'losses')
+        const t = stats.find(s => s.name === 'ties')
+        if (abbr) {
+          if (w) wins[abbr] = parseInt(w.value, 10) || 0
+          const gp = (parseInt(w?.value,10)||0) + (parseInt(l?.value,10)||0) + (parseInt(t?.value,10)||0)
+          played[abbr] = gp
+        }
       })
     })
-    return Object.keys(wins).length > 0 ? wins : null
+    return Object.keys(wins).length > 0 ? { wins, played } : null
   } catch {
     return null
   }
