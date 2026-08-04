@@ -142,7 +142,7 @@ export default function League({ leagueId, initMeta = {}, onNavigate }) {
   )
 
   const prices = leaguePrices(league)
-  const TABS = ['Leaderboard','Teams','Draft','Share', ...(isOrganizer ? ['Admin'] : [])]
+  const TABS = ['Leaderboard','Teams','Draft','Share','Admin']
 
   return (
     <div style={{ minHeight:'100vh', background:'#060d16' }}>
@@ -180,6 +180,9 @@ export default function League({ leagueId, initMeta = {}, onNavigate }) {
                 {t}
                 {t==='Leaderboard' && (
                   <span style={{ marginLeft:5, background:'#0d2818', color:'#4ade80', borderRadius:99, padding:'0 7px', fontSize:10 }}>{entries.length}</span>
+                )}
+                {t==='Admin' && !isOrganizer && (
+                  <span style={{ marginLeft:4, fontSize:10 }}>🔒</span>
                 )}
               </button>
             ))}
