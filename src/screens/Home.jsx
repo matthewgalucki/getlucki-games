@@ -53,8 +53,8 @@ export default function Home({ onNavigate }) {
           Run your league.<br />
           <span style={{ color:'#4ade80' }}>Own the season.</span>
         </h1>
-        <p style={{ color:'#64748b', fontSize:17, maxWidth:500, margin:'0 auto 48px', lineHeight:1.65 }}>
-          Pick your NFL teams. Manage your budget. Watch the wins stack up all season long.
+        <p style={{ color:'#64748b', fontSize:17, maxWidth:520, margin:'0 auto 48px', lineHeight:1.65 }}>
+          Season-long sports games for your friends, your office, or your bar. Pick a game below and start a league in minutes.
         </p>
 
         {/* JOIN BOX */}
@@ -102,11 +102,14 @@ export default function Home({ onNavigate }) {
               <span style={{ fontWeight:900, fontSize:22, color:'#f1f5f9' }}>BankRoll</span>
               <span style={{ background:'#16a34a', color:'#fff', fontSize:10, fontWeight:800, borderRadius:99, padding:'2px 9px', letterSpacing:0.5 }}>LIVE</span>
             </div>
+            <p style={{ color:'#4ade80', fontSize:13, fontWeight:700, margin:'0 0 8px' }}>
+              ⚡ Set it and forget it — pick once, let it ride all season.
+            </p>
             <p style={{ color:'#64748b', fontSize:13, lineHeight:1.6, margin:'0 0 18px' }}>
-              Pick 6–7 NFL teams on a $120 budget. Cheaper teams are sleepers. Most wins at season's end wins.
+              Pick 6–7 NFL teams on a $120 budget before Week 1. No weekly picks, no upkeep — cheaper teams are sleepers, most total wins takes the season.
             </p>
             <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
-              {['Budget picks','Live win sync','Season-long'].map(tag => (
+              {['Pick once','No weekly upkeep','Live win sync'].map(tag => (
                 <span key={tag} style={{ background:'#0f2a12', color:'#4ade80', fontSize:10, fontWeight:700, borderRadius:99, padding:'3px 10px' }}>{tag}</span>
               ))}
             </div>
@@ -120,6 +123,24 @@ export default function Home({ onNavigate }) {
               <p style={{ color:'#64748b', fontSize:13 }}>Coming soon to Getlucki Games</p>
             </div>
           ))}
+
+          {/* SUGGEST A GAME */}
+          <a
+            href="mailto:matthew@galuckienterprises.com?subject=Game%20idea%20for%20Getlucki%20Games&body=Here's%20a%20game%20I'd%20love%20to%20see%3A%0A%0A"
+            style={{
+              display:'block', textDecoration:'none',
+              background:'#0a0f18', border:'1px dashed #1e3a5f', borderRadius:18, padding:26,
+              transition:'border-color 0.15s, background 0.15s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor='#16a34a'; e.currentTarget.style.background='#0c1421' }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor='#1e3a5f'; e.currentTarget.style.background='#0a0f18' }}
+          >
+            <div style={{ fontSize:40, marginBottom:14 }}>💡</div>
+            <div style={{ fontWeight:900, fontSize:22, color:'#f1f5f9', marginBottom:8 }}>Have a game idea?</div>
+            <p style={{ color:'#64748b', fontSize:13, lineHeight:1.6 }}>
+              Got a pool or contest you'd love to run? Tell us — we're always building new games. <span style={{ color:'#4ade80', fontWeight:700 }}>Let us know →</span>
+            </p>
+          </a>
         </div>
       </div>
     </div>
