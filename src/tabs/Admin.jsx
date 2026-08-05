@@ -15,7 +15,7 @@ export default function AdminTab({ entries, wins, prices, league, onDelete, onTo
     if (!addName.trim() || p.length < 1) return onToast('Enter name and valid team abbreviations')
     // Use the onSubmit from parent via a prop — we'll emit up
     // For now just show the format hint
-    onToast('Use the Draft tab to add entries — or use Supabase dashboard for bulk edits')
+    onToast('Use the Pick Teams tab to add entries — or use Supabase dashboard for bulk edits')
   }
 
   return (

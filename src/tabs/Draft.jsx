@@ -94,7 +94,7 @@ export default function DraftTab({ league, entries, prices, played = {}, onSubmi
 
   return (
     <div>
-      <h2 style={{ color:'#f1f5f9', fontSize:22, fontWeight:900, marginBottom:6 }}>📝 Draft Your Teams</h2>
+      <h2 style={{ color:'#f1f5f9', fontSize:22, fontWeight:900, marginBottom:6 }}>📝 Pick Your Teams</h2>
       <p style={{ color:'#94a3b8', fontSize:13, marginBottom:8 }}>
         Pick {picksMin}–{picksMax} teams within your ${budget} budget. Lower cost = bigger upset potential.
       </p>

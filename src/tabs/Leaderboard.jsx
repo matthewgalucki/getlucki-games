@@ -118,7 +118,7 @@ export default function Leaderboard({ entries, wins, prices, lastResults = {}, l
         {entries.length === 0 && (
           <div style={{ textAlign:'center', padding:'70px 0', color:'#64748b' }}>
             <div style={{ fontSize:48, marginBottom:14 }}>📋</div>
-            <p style={{ fontSize:15 }}>No entries yet. Share the join code to get players drafting!</p>
+            <p style={{ fontSize:15 }}>No entries yet. Share the join code to get players picking!</p>
           </div>
         )}
       </div>

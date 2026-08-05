@@ -102,7 +102,7 @@ export default function Create({ onNavigate }) {
           <span style={{ fontSize:40 }}>💰</span>
           <div>
             <div style={{ fontWeight:900, fontSize:22, color:'#f1f5f9' }}>BankRoll</div>
-            <div style={{ fontSize:13, color:'#94a3b8' }}>NFL season-long budget draft</div>
+            <div style={{ fontSize:13, color:'#94a3b8' }}>NFL season-long team pick pool</div>
           </div>
         </div>
 

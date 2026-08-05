@@ -103,10 +103,10 @@ export default function Home({ onNavigate }) {
               <span style={{ background:'#16a34a', color:'#fff', fontSize:10, fontWeight:800, borderRadius:99, padding:'2px 9px', letterSpacing:0.5 }}>LIVE</span>
             </div>
             <p style={{ color:'#64748b', fontSize:13, lineHeight:1.6, margin:'0 0 18px' }}>
-              Draft 6–7 NFL teams on a $120 budget. Cheaper teams are sleepers. Most wins at season's end wins.
+              Pick 6–7 NFL teams on a $120 budget. Cheaper teams are sleepers. Most wins at season's end wins.
             </p>
             <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
-              {['Budget draft','Live win sync','Season-long'].map(tag => (
+              {['Budget picks','Live win sync','Season-long'].map(tag => (
                 <span key={tag} style={{ background:'#0f2a12', color:'#4ade80', fontSize:10, fontWeight:700, borderRadius:99, padding:'3px 10px' }}>{tag}</span>
               ))}
             </div>

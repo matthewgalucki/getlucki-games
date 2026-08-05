@@ -160,7 +160,7 @@ export default function League({ leagueId, initMeta = {}, onNavigate }) {
   )
 
   const prices = leaguePrices(league)
-  const TABS = ['Leaderboard','Teams','Draft','Share','Admin']
+  const TABS = ['Leaderboard','Teams','Pick Teams','Share','Admin']
 
   return (
     <div style={{ minHeight:'100vh', background:'#060d16' }}>
@@ -212,7 +212,7 @@ export default function League({ leagueId, initMeta = {}, onNavigate }) {
       <div style={{ maxWidth:960, margin:'0 auto', padding:'28px 20px 80px' }}>
         {tab==='Leaderboard' && <Leaderboard entries={entries} wins={wins} prices={prices} lastResults={lastResults} lastSynced={lastSynced} onRefresh={refreshWins} refreshing={refreshing} />}
         {tab==='Teams'       && <TeamsTab wins={wins} entries={entries} prices={prices} />}
-        {tab==='Draft'       && <DraftTab league={league} entries={entries} prices={prices} played={played} onSubmit={submitEntry} onToast={setToast} />}
+        {tab==='Pick Teams' && <DraftTab league={league} entries={entries} prices={prices} played={played} onSubmit={submitEntry} onToast={setToast} />}
         {tab==='Share'       && <ShareTab league={league} />}
         {tab==='Admin'       && (
           isOrganizer

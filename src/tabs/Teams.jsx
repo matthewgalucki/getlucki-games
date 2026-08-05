@@ -17,7 +17,7 @@ export default function TeamsTab({ wins, entries, prices }) {
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:20 }}>
         <div>
           <h2 style={{ color:'#f1f5f9', fontSize:22, fontWeight:900, marginBottom:4 }}>🏈 All 32 Teams</h2>
-          <p style={{ color:'#94a3b8', fontSize:12 }}>Current prices, win totals, and draft popularity</p>
+          <p style={{ color:'#94a3b8', fontSize:12 }}>Current prices, win totals, and pick popularity</p>
         </div>
         <select value={sort} onChange={e => setSort(e.target.value)} style={{
           background:'#0c1421', border:'1px solid #1a2332', borderRadius:8,
