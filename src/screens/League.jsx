@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../supabase.js'
-import { TEAMS, VIETRI_ENTRIES, calcScore, calcSpent, priceColor, pctTaken, fetchNFLWins, leaguePrices, teamsWithPrices } from '../data.js'
+import { TEAMS, VIETRI_ENTRIES, calcScore, calcSpent, priceColor, pctTaken, fetchNFLWins, fetchLastResults, leaguePrices, teamsWithPrices } from '../data.js'
 import { Toast, Medal, QRCode, Btn, Card, Input } from '../components.jsx'
 import Leaderboard from '../tabs/Leaderboard.jsx'
 import TeamsTab    from '../tabs/Teams.jsx'
@@ -15,6 +15,7 @@ export default function League({ leagueId, initMeta = {}, onNavigate }) {
   const [entries, setEntries]     = useState([])
   const [wins, setWins]           = useState({})
   const [played, setPlayed]       = useState({})
+  const [lastResults, setLastResults] = useState({})
   const [tab, setTab]             = useState('Leaderboard')
   const [isOrganizer, setIsOrg]   = useState(initMeta.isOrganizer || false)
   const [loading, setLoading]     = useState(true)
@@ -43,9 +44,11 @@ export default function League({ leagueId, initMeta = {}, onNavigate }) {
     if (winData) {
       const w = {}
       const p = {}
-      winData.forEach(r => { w[r.abbr] = r.wins; p[r.abbr] = r.games_played || 0 })
+      const r = {}
+      winData.forEach(row => { w[row.abbr] = row.wins; p[row.abbr] = row.games_played || 0; if (row.last_result) r[row.abbr] = row.last_result })
       setWins(w)
       setPlayed(p)
+      setLastResults(r)
     }
     setLoading(false)
   }
@@ -69,19 +72,21 @@ export default function League({ leagueId, initMeta = {}, onNavigate }) {
 
   const refreshWins = useCallback(async () => {
     setRefreshing(true)
-    const live = await fetchNFLWins()
+    const [live, results] = await Promise.all([fetchNFLWins(), fetchLastResults()])
     if (live) {
       const { wins: liveWins, played: livePlayed } = live
       const rows = Object.keys(liveWins).map(abbr => ({
         abbr,
         wins: liveWins[abbr],
         games_played: livePlayed[abbr] || 0,
+        last_result: results?.[abbr] || null,
         last_synced: new Date().toISOString(),
       }))
       const { error } = await supabase.from('team_wins').upsert(rows, { onConflict:'abbr' })
       if (!error) {
         setWins(liveWins)
         setPlayed(livePlayed)
+        if (results) setLastResults(results)
         setLastSynced(new Date().toLocaleString())
         setToast('Wins synced from ESPN ✓')
       } else {
@@ -205,7 +210,7 @@ export default function League({ leagueId, initMeta = {}, onNavigate }) {
 
       {/* CONTENT */}
       <div style={{ maxWidth:960, margin:'0 auto', padding:'28px 20px 80px' }}>
-        {tab==='Leaderboard' && <Leaderboard entries={entries} wins={wins} prices={prices} lastSynced={lastSynced} onRefresh={refreshWins} refreshing={refreshing} />}
+        {tab==='Leaderboard' && <Leaderboard entries={entries} wins={wins} prices={prices} lastResults={lastResults} lastSynced={lastSynced} onRefresh={refreshWins} refreshing={refreshing} />}
         {tab==='Teams'       && <TeamsTab wins={wins} entries={entries} prices={prices} />}
         {tab==='Draft'       && <DraftTab league={league} entries={entries} prices={prices} played={played} onSubmit={submitEntry} onToast={setToast} />}
         {tab==='Share'       && <ShareTab league={league} />}

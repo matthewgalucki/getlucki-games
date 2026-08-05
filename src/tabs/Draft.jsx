@@ -2,9 +2,9 @@ import { useState } from 'react'
 import { TEAMS, calcSpent, priceColor } from '../data.js'
 
 export default function DraftTab({ league, entries, prices, played = {}, onSubmit, onToast }) {
-  const [name, setName]         = useState('')   // screen name (public)
+  const [realName, setRealName] = useState('')   // required, primary/default display
+  const [screenName, setScreenName] = useState('') // optional, overrides display if set
   const [email, setEmail]       = useState('')   // required, private
-  const [realName, setRealName] = useState('')   // optional, private
   const [cell, setCell]         = useState('')   // optional, private
   const [picks, setPicks]       = useState([])
   const [done, setDone]         = useState(false)
@@ -17,6 +17,9 @@ export default function DraftTab({ league, entries, prices, played = {}, onSubmi
   const picksMax  = league.picks_max || 7
   const spent     = calcSpent(picks, prices)
   const remaining = budget - spent
+
+  // What shows on the public leaderboard: screen name if given, else real name.
+  const displayName = screenName.trim() || realName.trim()
 
   function isLocked(abbr) {
     return (played[abbr] || 0) > 0
@@ -36,21 +39,21 @@ export default function DraftTab({ league, entries, prices, played = {}, onSubmi
   }
 
   async function submit() {
-    if (!name.trim())              return setError('Enter a screen name.')
+    if (!realName.trim())          return setError('Enter your name.')
     if (!email.trim())             return setError('Enter your email.')
     if (!validEmail(email))        return setError('Enter a valid email address.')
     if (picks.length < picksMin)   return setError(`Pick at least ${picksMin} teams.`)
     if (remaining < 0)             return setError('You are over budget.')
     const lockedPick = picks.find(a => isLocked(a))
     if (lockedPick)                return setError(`${lockedPick} has already played and can no longer be picked. Remove it to continue.`)
-    const dupe = entries.find(e => e.player_name.toLowerCase() === name.trim().toLowerCase())
-    if (dupe)                      return setError('That screen name is already taken in this league.')
+    const dupe = entries.find(e => e.player_name.toLowerCase() === displayName.toLowerCase())
+    if (dupe)                      return setError('That name is already taken in this league. Add a screen name to stand out.')
 
     setSubmitting(true); setError('')
     const err = await onSubmit({
-      player_name: name.trim(),
+      player_name: displayName,          // public display (screen name or real name)
+      real_name: realName.trim(),        // always stored privately
       email: email.trim(),
-      real_name: realName.trim() || null,
       cell: cell.trim() || null,
     }, picks)
     if (err) { setError(err); setSubmitting(false); return }
@@ -82,7 +85,7 @@ export default function DraftTab({ league, entries, prices, played = {}, onSubmi
           )
         })}
       </div>
-      <button onClick={() => { setDone(false); setName(''); setEmail(''); setRealName(''); setCell(''); setPicks([]) }}
+      <button onClick={() => { setDone(false); setRealName(''); setScreenName(''); setEmail(''); setCell(''); setPicks([]) }}
         style={{ background:'#0c1421', border:'1px solid #1a2332', color:'#64748b', padding:'8px 22px', borderRadius:99, cursor:'pointer', fontWeight:700, fontFamily:'inherit' }}>
         Submit another entry
       </button>
@@ -110,9 +113,9 @@ export default function DraftTab({ league, entries, prices, played = {}, onSubmi
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:10 }}>
           <div>
             <label style={{ display:'block', fontSize:11, fontWeight:700, color:'#94a3b8', letterSpacing:1, marginBottom:5 }}>
-              SCREEN NAME <span style={{ color:'#f87171' }}>*</span>
+              YOUR NAME <span style={{ color:'#f87171' }}>*</span>
             </label>
-            <input value={name} onChange={e => setName(e.target.value)} placeholder="Shown on leaderboard"
+            <input value={realName} onChange={e => setRealName(e.target.value)} placeholder="First & last name"
               style={{ width:'100%', background:'#0c1421', border:'1px solid #1a2332', borderRadius:10, padding:'11px 14px', color:'#f1f5f9', fontSize:14, outline:'none', boxSizing:'border-box', fontFamily:'inherit' }}
             />
           </div>
@@ -128,9 +131,9 @@ export default function DraftTab({ league, entries, prices, played = {}, onSubmi
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
           <div>
             <label style={{ display:'block', fontSize:11, fontWeight:700, color:'#94a3b8', letterSpacing:1, marginBottom:5 }}>
-              REAL NAME <span style={{ color:'#64748b', fontWeight:400 }}>(optional)</span>
+              SCREEN NAME <span style={{ color:'#64748b', fontWeight:400 }}>(optional)</span>
             </label>
-            <input value={realName} onChange={e => setRealName(e.target.value)} placeholder="For prize payouts"
+            <input value={screenName} onChange={e => setScreenName(e.target.value)} placeholder="Leave blank to use your name"
               style={{ width:'100%', background:'#0c1421', border:'1px solid #1a2332', borderRadius:10, padding:'11px 14px', color:'#f1f5f9', fontSize:14, outline:'none', boxSizing:'border-box', fontFamily:'inherit' }}
             />
           </div>
@@ -144,7 +147,7 @@ export default function DraftTab({ league, entries, prices, played = {}, onSubmi
           </div>
         </div>
         <p style={{ fontSize:11, color:'#64748b', marginTop:8 }}>
-          🔒 Only your screen name is public. Email, real name, and cell stay private — used only to reach you if you win.
+          🔒 The leaderboard will show <strong style={{ color:'#94a3b8' }}>{displayName || 'your name'}</strong>. Add a screen name if you'd rather not show your real name publicly. Email and cell stay private — used only to reach you if you win.
         </p>
       </div>
 

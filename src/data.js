@@ -178,3 +178,29 @@ export async function fetchNFLWins() {
     return null
   }
 }
+
+// Fetch each team's most-recent completed game result.
+// Returns { KC: 'W', BUF: 'L', ... } — the outcome of that team's latest finished game.
+// Used for the "perfect week" shoutout on the leaderboard.
+export async function fetchLastResults() {
+  try {
+    const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard`)
+    if (!res.ok) throw new Error()
+    const data = await res.json()
+    const results = {}
+    ;(data.events || []).forEach(event => {
+      const comp = event.competitions?.[0]
+      if (!comp || comp.status?.type?.completed !== true) return
+      ;(comp.competitors || []).forEach(c => {
+        const abbr = c.team?.abbreviation
+        if (!abbr) return
+        // 'winner' boolean is provided on completed games
+        if (c.winner === true) results[abbr] = 'W'
+        else if (c.winner === false) results[abbr] = 'L'
+      })
+    })
+    return Object.keys(results).length > 0 ? results : null
+  } catch {
+    return null
+  }
+}

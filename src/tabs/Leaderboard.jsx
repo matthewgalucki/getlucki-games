@@ -2,12 +2,20 @@ import { useState } from 'react'
 import { TEAMS, calcScore, calcSpent, priceColor } from '../data.js'
 import { Medal, Btn } from '../components.jsx'
 
-export default function Leaderboard({ entries, wins, prices, lastSynced, onRefresh, refreshing }) {
+export default function Leaderboard({ entries, wins, prices, lastResults = {}, lastSynced, onRefresh, refreshing }) {
   const [expanded, setExpanded] = useState(null)
   const [view, setView] = useState('all')
 
+  // A player has a "perfect week" if every one of their teams that has a
+  // recorded most-recent result WON it, and at least one team has a result.
+  function perfectWeek(picks) {
+    const withResults = picks.filter(a => lastResults[a] === 'W' || lastResults[a] === 'L')
+    if (withResults.length === 0) return false
+    return withResults.every(a => lastResults[a] === 'W')
+  }
+
   const ranked = [...entries]
-    .map(e => ({ ...e, score:calcScore(e.picks, wins), spent:calcSpent(e.picks, prices) }))
+    .map(e => ({ ...e, score:calcScore(e.picks, wins), spent:calcSpent(e.picks, prices), perfect:perfectWeek(e.picks) }))
     .sort((a, b) => b.score - a.score || a.spent - b.spent)
 
   const displayed = view === 'top10' ? ranked.slice(0, 10) : ranked
@@ -64,7 +72,17 @@ export default function Leaderboard({ entries, wins, prices, lastSynced, onRefre
               }}>
                 <div style={{ display:'flex', justifyContent:'center' }}><Medal rank={rank} /></div>
                 <div>
-                  <div style={{ fontWeight:800, fontSize:14, color:'#f1f5f9' }}>{entry.player_name}</div>
+                  <div style={{ fontWeight:800, fontSize:14, color:'#f1f5f9', display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' }}>
+                    {entry.player_name}
+                    {entry.perfect && (
+                      <span style={{
+                        display:'inline-flex', alignItems:'center', gap:3,
+                        background:'linear-gradient(135deg,#f59e0b,#fbbf24)', color:'#1a1206',
+                        borderRadius:99, padding:'1px 9px', fontSize:10, fontWeight:900, letterSpacing:0.5,
+                        boxShadow:'0 0 12px rgba(251,191,36,0.4)',
+                      }}>🔥 PERFECT WEEK</span>
+                    )}
+                  </div>
                   <div style={{ fontSize:10, color:'#64748b', marginTop:2 }}>{entry.picks.length} picks</div>
                 </div>
                 <div style={{ textAlign:'right', fontFamily:'monospace', fontWeight:900, fontSize:22, color:rank===1?'#4ade80':rank<=3?'#93c5fd':'#e2e8f0' }}>{entry.score}</div>
