@@ -66,9 +66,14 @@ export default function MasterAdmin({ onNavigate }) {
             <div style={{ fontSize:11, color:'#94a3b8' }}>The default starting values for all new leagues</div>
           </div>
         </div>
-        <Btn onClick={save} disabled={saving || !dirty}>
-          {saving ? 'Saving…' : dirty ? '💾 Save Rankings' : '✓ Saved'}
-        </Btn>
+        <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+          <button onClick={() => onNavigate('allleagues')} style={{ background:'#0c1421', border:'1px solid #1e2d3d', borderRadius:8, color:'#94a3b8', padding:'7px 14px', cursor:'pointer', fontWeight:700, fontSize:12, fontFamily:'inherit' }}>
+            All Leagues →
+          </button>
+          <Btn onClick={save} disabled={saving || !dirty}>
+            {saving ? 'Saving…' : dirty ? '💾 Save Rankings' : '✓ Saved'}
+          </Btn>
+        </div>
       </nav>
 
       <div style={{ maxWidth:600, margin:'32px auto', padding:'0 24px 100px' }}>

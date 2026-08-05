@@ -4,6 +4,7 @@ import Home        from './screens/Home.jsx'
 import Create      from './screens/Create.jsx'
 import League      from './screens/League.jsx'
 import MasterAdmin from './screens/MasterAdmin.jsx'
+import AllLeagues  from './screens/AllLeagues.jsx'
 
 export default function App() {
   const [screen, setScreen]       = useState('home')
@@ -17,6 +18,8 @@ export default function App() {
     const admin = params.get('admin')
     if (admin === 'rankings') {
       setScreen('master')
+    } else if (admin === 'leagues') {
+      setScreen('allleagues')
     } else if (joinCode) {
       setScreen('join')
       setLeagueId(joinCode.toUpperCase())
@@ -59,6 +62,7 @@ export default function App() {
       )}
       {screen === 'create' && <Create onNavigate={navigate} />}
       {screen === 'master' && <MasterAdmin onNavigate={navigate} />}
+      {screen === 'allleagues' && <AllLeagues onNavigate={navigate} />}
       {screen === 'league' && <League leagueId={leagueId} initMeta={leagueMeta} onNavigate={navigate} />}
     </>
   )

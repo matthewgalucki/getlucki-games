@@ -5,17 +5,70 @@ import { Btn, Card } from '../components.jsx'
 export default function AdminTab({ entries, wins, prices, league, onDelete, onTogglePaid, onWinUpdate, onRefresh, refreshing, onToast }) {
   const [view, setView]       = useState('entries')
   const [winEdits, setWinEdits] = useState({})
-  const [addName, setAddName] = useState('')
-  const [addPicks, setAddPicks] = useState('')
 
   const sorted = [...entries].sort((a, b) => calcScore(b.picks, wins) - calcScore(a.picks, wins))
 
-  function handleAddManual() {
-    const p = addPicks.toUpperCase().split(',').map(x => x.trim()).filter(x => TEAMS.find(t => t.abbr === x))
-    if (!addName.trim() || p.length < 1) return onToast('Enter name and valid team abbreviations')
-    // Use the onSubmit from parent via a prop — we'll emit up
-    // For now just show the format hint
-    onToast('Use the Pick Teams tab to add entries — or use Supabase dashboard for bulk edits')
+  // Trigger a file download in the browser
+  function downloadFile(filename, text, type = 'text/csv') {
+    const blob = new Blob([text], { type })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  // CSV-escape a cell (wrap in quotes if it contains comma/quote/newline)
+  function csvCell(val) {
+    const s = String(val ?? '')
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
+  }
+
+  const leagueSlug = (league.name || 'league').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+
+  // Roster export — contact info for email communications
+  function exportRoster() {
+    const headers = ['Display Name', 'Real Name', 'Email', 'Cell', 'Paid', 'Teams', 'Budget Spent']
+    const rows = sorted.map(e => [
+      e.player_name,
+      e.real_name || '',
+      e.email || '',
+      e.cell || '',
+      league.collect_payment ? (e.paid ? 'Yes' : 'No') : '',
+      e.picks.join(' / '),
+      '$' + calcSpent(e.picks, prices),
+    ])
+    const csv = [headers, ...rows].map(r => r.map(csvCell).join(',')).join('\n')
+    downloadFile(`${leagueSlug}-roster.csv`, csv)
+    onToast('Roster exported ✓')
+  }
+
+  // Standings export — current ranked results
+  function exportStandings() {
+    const headers = ['Rank', 'Player', 'Wins', 'Budget Spent', 'Cost Per Win', 'Teams']
+    const rows = sorted.map((e, i) => {
+      const score = calcScore(e.picks, wins)
+      const spent = calcSpent(e.picks, prices)
+      return [
+        i + 1,
+        e.player_name,
+        score,
+        '$' + spent,
+        score > 0 ? '$' + (spent / score).toFixed(1) : '—',
+        e.picks.join(' / '),
+      ]
+    })
+    const csv = [headers, ...rows].map(r => r.map(csvCell).join(',')).join('\n')
+    downloadFile(`${leagueSlug}-standings.csv`, csv)
+    onToast('Standings exported ✓')
+  }
+
+  // Copy just the email list (comma-separated) for pasting into an email client
+  function copyEmails() {
+    const emails = sorted.map(e => e.email).filter(Boolean).join(', ')
+    if (!emails) return onToast('No emails on file yet')
+    navigator.clipboard.writeText(emails).then(() => onToast('Email list copied ✓'))
   }
 
   return (
@@ -34,6 +87,21 @@ export default function AdminTab({ entries, wins, prices, league, onDelete, onTo
 
       {view==='entries' && (
         <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+          {/* Export toolbar */}
+          {entries.length > 0 && (
+            <div style={{ display:'flex', gap:8, flexWrap:'wrap', marginBottom:10, padding:'12px 14px', background:'#0a0f18', border:'1px solid #111827', borderRadius:10 }}>
+              <span style={{ fontSize:11, color:'#64748b', fontWeight:700, letterSpacing:1, alignSelf:'center', marginRight:4 }}>EXPORT:</span>
+              <button onClick={exportRoster} style={{ background:'#0c1421', border:'1px solid #1e2d3d', borderRadius:8, color:'#4ade80', padding:'7px 14px', cursor:'pointer', fontWeight:700, fontSize:12, fontFamily:'inherit' }}>
+                📋 Roster (CSV)
+              </button>
+              <button onClick={exportStandings} style={{ background:'#0c1421', border:'1px solid #1e2d3d', borderRadius:8, color:'#4ade80', padding:'7px 14px', cursor:'pointer', fontWeight:700, fontSize:12, fontFamily:'inherit' }}>
+                🏆 Standings (CSV)
+              </button>
+              <button onClick={copyEmails} style={{ background:'#0c1421', border:'1px solid #1e2d3d', borderRadius:8, color:'#94a3b8', padding:'7px 14px', cursor:'pointer', fontWeight:700, fontSize:12, fontFamily:'inherit' }}>
+                ✉️ Copy Email List
+              </button>
+            </div>
+          )}
           {league.collect_payment && entries.length > 0 && (() => {
             const paidCount = entries.filter(e => e.paid).length
             const fee = parseFloat(league.entry_fee) || 0
