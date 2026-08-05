@@ -2,7 +2,10 @@ import { useState } from 'react'
 import { TEAMS, calcSpent, priceColor } from '../data.js'
 
 export default function DraftTab({ league, entries, prices, played = {}, onSubmit, onToast }) {
-  const [name, setName]         = useState('')
+  const [name, setName]         = useState('')   // screen name (public)
+  const [email, setEmail]       = useState('')   // required, private
+  const [realName, setRealName] = useState('')   // optional, private
+  const [cell, setCell]         = useState('')   // optional, private
   const [picks, setPicks]       = useState([])
   const [done, setDone]         = useState(false)
   const [search, setSearch]     = useState('')
@@ -28,17 +31,28 @@ export default function DraftTab({ league, entries, prices, played = {}, onSubmi
     setPicks([...picks, abbr])
   }
 
+  function validEmail(e) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim())
+  }
+
   async function submit() {
-    if (!name.trim())              return setError('Enter your name.')
+    if (!name.trim())              return setError('Enter a screen name.')
+    if (!email.trim())             return setError('Enter your email.')
+    if (!validEmail(email))        return setError('Enter a valid email address.')
     if (picks.length < picksMin)   return setError(`Pick at least ${picksMin} teams.`)
     if (remaining < 0)             return setError('You are over budget.')
     const lockedPick = picks.find(a => isLocked(a))
     if (lockedPick)                return setError(`${lockedPick} has already played and can no longer be picked. Remove it to continue.`)
     const dupe = entries.find(e => e.player_name.toLowerCase() === name.trim().toLowerCase())
-    if (dupe)                      return setError('That name is already in this league.')
+    if (dupe)                      return setError('That screen name is already taken in this league.')
 
     setSubmitting(true); setError('')
-    const err = await onSubmit(name.trim(), picks)
+    const err = await onSubmit({
+      player_name: name.trim(),
+      email: email.trim(),
+      real_name: realName.trim() || null,
+      cell: cell.trim() || null,
+    }, picks)
     if (err) { setError(err); setSubmitting(false); return }
     onToast('Picks locked in! 🎉')
     setDone(true)
@@ -68,7 +82,7 @@ export default function DraftTab({ league, entries, prices, played = {}, onSubmi
           )
         })}
       </div>
-      <button onClick={() => { setDone(false); setName(''); setPicks([]) }}
+      <button onClick={() => { setDone(false); setName(''); setEmail(''); setRealName(''); setCell(''); setPicks([]) }}
         style={{ background:'#0c1421', border:'1px solid #1a2332', color:'#64748b', padding:'8px 22px', borderRadius:99, cursor:'pointer', fontWeight:700, fontFamily:'inherit' }}>
         Submit another entry
       </button>
@@ -85,10 +99,48 @@ export default function DraftTab({ league, entries, prices, played = {}, onSubmi
         🔒 Once a team plays its first game of the season, it locks and can no longer be picked.
       </p>
 
-      {/* Name input */}
-      <input value={name} onChange={e => setName(e.target.value)} placeholder="Your full name"
-        style={{ width:'100%', background:'#0c1421', border:'1px solid #1a2332', borderRadius:10, padding:'12px 16px', color:'#f1f5f9', fontSize:15, outline:'none', boxSizing:'border-box', marginBottom:16, fontFamily:'inherit' }}
-      />
+      {/* Player info */}
+      <div style={{ marginBottom:18 }}>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:10 }}>
+          <div>
+            <label style={{ display:'block', fontSize:11, fontWeight:700, color:'#94a3b8', letterSpacing:1, marginBottom:5 }}>
+              SCREEN NAME <span style={{ color:'#f87171' }}>*</span>
+            </label>
+            <input value={name} onChange={e => setName(e.target.value)} placeholder="Shown on leaderboard"
+              style={{ width:'100%', background:'#0c1421', border:'1px solid #1a2332', borderRadius:10, padding:'11px 14px', color:'#f1f5f9', fontSize:14, outline:'none', boxSizing:'border-box', fontFamily:'inherit' }}
+            />
+          </div>
+          <div>
+            <label style={{ display:'block', fontSize:11, fontWeight:700, color:'#94a3b8', letterSpacing:1, marginBottom:5 }}>
+              EMAIL <span style={{ color:'#f87171' }}>*</span>
+            </label>
+            <input value={email} onChange={e => setEmail(e.target.value)} type="email" placeholder="you@email.com"
+              style={{ width:'100%', background:'#0c1421', border:'1px solid #1a2332', borderRadius:10, padding:'11px 14px', color:'#f1f5f9', fontSize:14, outline:'none', boxSizing:'border-box', fontFamily:'inherit' }}
+            />
+          </div>
+        </div>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+          <div>
+            <label style={{ display:'block', fontSize:11, fontWeight:700, color:'#94a3b8', letterSpacing:1, marginBottom:5 }}>
+              REAL NAME <span style={{ color:'#64748b', fontWeight:400 }}>(optional)</span>
+            </label>
+            <input value={realName} onChange={e => setRealName(e.target.value)} placeholder="For prize payouts"
+              style={{ width:'100%', background:'#0c1421', border:'1px solid #1a2332', borderRadius:10, padding:'11px 14px', color:'#f1f5f9', fontSize:14, outline:'none', boxSizing:'border-box', fontFamily:'inherit' }}
+            />
+          </div>
+          <div>
+            <label style={{ display:'block', fontSize:11, fontWeight:700, color:'#94a3b8', letterSpacing:1, marginBottom:5 }}>
+              CELL <span style={{ color:'#64748b', fontWeight:400 }}>(optional)</span>
+            </label>
+            <input value={cell} onChange={e => setCell(e.target.value)} type="tel" placeholder="(555) 123-4567"
+              style={{ width:'100%', background:'#0c1421', border:'1px solid #1a2332', borderRadius:10, padding:'11px 14px', color:'#f1f5f9', fontSize:14, outline:'none', boxSizing:'border-box', fontFamily:'inherit' }}
+            />
+          </div>
+        </div>
+        <p style={{ fontSize:11, color:'#64748b', marginTop:8 }}>
+          🔒 Only your screen name is public. Email, real name, and cell stay private — used only to reach you if you win.
+        </p>
+      </div>
 
       {/* Budget bar */}
       <div style={{ background:'#0a0f18', border:'1px solid #111827', borderRadius:12, padding:'14px 18px', marginBottom:16, display:'flex', gap:28, alignItems:'center', flexWrap:'wrap' }}>

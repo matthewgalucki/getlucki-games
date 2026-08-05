@@ -41,7 +41,13 @@ export default function AdminTab({ entries, wins, prices, league, onDelete, onWi
               padding:'13px 16px', display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:12, flexWrap:'wrap',
             }}>
               <div>
-                <div style={{ fontWeight:800, color:'#e2e8f0', fontSize:14, marginBottom:8 }}>{entry.player_name}</div>
+                <div style={{ fontWeight:800, color:'#e2e8f0', fontSize:14, marginBottom:4 }}>{entry.player_name}</div>
+                {/* Private contact info — organizer only */}
+                <div style={{ fontSize:11, color:'#64748b', marginBottom:8, display:'flex', flexWrap:'wrap', gap:'2px 12px' }}>
+                  {entry.email && <span>✉️ {entry.email}</span>}
+                  {entry.real_name && <span>👤 {entry.real_name}</span>}
+                  {entry.cell && <span>📱 {entry.cell}</span>}
+                </div>
                 <div style={{ display:'flex', flexWrap:'wrap', gap:5 }}>
                   {entry.picks.map(abbr => {
                     const price = prices[abbr] || 0

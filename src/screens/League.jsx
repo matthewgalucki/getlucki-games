@@ -93,10 +93,17 @@ export default function League({ leagueId, initMeta = {}, onNavigate }) {
     setRefreshing(false)
   }, [])
 
-  async function submitEntry(playerName, picks) {
+  async function submitEntry(playerInfo, picks) {
     const { data, error } = await supabase
       .from('entries')
-      .insert({ league_id:leagueId, player_name:playerName, picks })
+      .insert({
+        league_id: leagueId,
+        player_name: playerInfo.player_name,
+        email: playerInfo.email,
+        real_name: playerInfo.real_name,
+        cell: playerInfo.cell,
+        picks,
+      })
       .select()
     if (error) return error.message
     setEntries(prev => [...prev, { ...data[0], picks }])
