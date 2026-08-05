@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabase.js'
-import { slugify, randCode, DEFAULT_ORDER, ranksToPrice } from '../data.js'
+import { slugify, randCode, DEFAULT_ORDER, ranksToPrice, SEASON } from '../data.js'
 import { Btn, Input, Toggle, Card } from '../components.jsx'
 import RankingEditor from '../RankingEditor.jsx'
 
@@ -8,6 +8,7 @@ export default function Create({ onNavigate }) {
   const [form, setForm] = useState({
     name:'', organizer:'', password:'', confirmPassword:'',
     join_code:'', is_public:true, budget:120, picks_min:6, picks_max:7,
+    collect_payment:false, entry_fee:'', payment_note:'',
   })
   const [loading, setLoading]     = useState(false)
   const [error, setError]         = useState('')
@@ -79,7 +80,10 @@ export default function Create({ onNavigate }) {
       picks_min:form.picks_min,
       picks_max:form.picks_max,
       team_prices,
-      season:2025,
+      collect_payment:form.collect_payment,
+      entry_fee:form.collect_payment ? (parseFloat(form.entry_fee) || null) : null,
+      payment_note:form.collect_payment ? (form.payment_note.trim() || null) : null,
+      season:SEASON,
     })
 
     if (err) { setError('Failed to create league: ' + err.message); setLoading(false); return }
@@ -166,6 +170,40 @@ export default function Create({ onNavigate }) {
             <div style={{ fontSize:12, color:'#94a3b8' }}>Anyone with the link can view standings</div>
           </div>
           <Toggle value={form.is_public} onChange={v => set('is_public', v)} />
+        </Card>
+
+        {/* Payment tracking */}
+        <Card style={{ marginBottom:16, padding:0, overflow:'hidden' }}>
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', gap:16, padding:'16px 20px' }}>
+            <div>
+              <div style={{ fontWeight:700, fontSize:14, color:'#e2e8f0', marginBottom:3 }}>Track entry payments</div>
+              <div style={{ fontSize:12, color:'#94a3b8' }}>Mark who's paid — you collect the money yourself (Venmo, cash, etc.)</div>
+            </div>
+            <Toggle value={form.collect_payment} onChange={v => set('collect_payment', v)} />
+          </div>
+          {form.collect_payment && (
+            <div style={{ padding:'0 20px 20px', borderTop:'1px solid #111827' }}>
+              <div style={{ display:'grid', gridTemplateColumns:'120px 1fr', gap:12, paddingTop:14 }}>
+                <div>
+                  <label style={{ display:'block', fontSize:11, fontWeight:700, color:'#94a3b8', letterSpacing:1, marginBottom:6 }}>ENTRY FEE ($)</label>
+                  <input type="number" min={0} value={form.entry_fee} placeholder="20"
+                    onChange={e => set('entry_fee', e.target.value)}
+                    style={{ width:'100%', background:'#0c1421', border:'1px solid #1e2d3d', borderRadius:10, padding:'11px 14px', color:'#f1f5f9', fontSize:15, outline:'none', boxSizing:'border-box' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display:'block', fontSize:11, fontWeight:700, color:'#94a3b8', letterSpacing:1, marginBottom:6 }}>HOW TO PAY (shown to players)</label>
+                  <input value={form.payment_note} placeholder="e.g. Venmo @ben-vietri"
+                    onChange={e => set('payment_note', e.target.value)}
+                    style={{ width:'100%', background:'#0c1421', border:'1px solid #1e2d3d', borderRadius:10, padding:'11px 14px', color:'#f1f5f9', fontSize:14, outline:'none', boxSizing:'border-box', fontFamily:'inherit' }}
+                  />
+                </div>
+              </div>
+              <p style={{ fontSize:11, color:'#64748b', marginTop:10 }}>
+                Getlucki doesn't process payments — this just lets you track who has paid in the Admin tab.
+              </p>
+            </div>
+          )}
         </Card>
 
         {/* Power rankings adjustment */}

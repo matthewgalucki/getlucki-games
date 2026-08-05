@@ -99,6 +99,12 @@ export default function DraftTab({ league, entries, prices, played = {}, onSubmi
         🔒 Once a team plays its first game of the season, it locks and can no longer be picked.
       </p>
 
+      {league.collect_payment && (
+        <p style={{ color:'#4ade80', fontSize:13, marginBottom:22, background:'#0d2818', border:'1px solid #16a34a', borderRadius:8, padding:'10px 14px' }}>
+          💵 Entry fee{league.entry_fee ? <>: <strong>${league.entry_fee}</strong></> : ''}{league.payment_note ? <> · Pay via {league.payment_note}</> : ''}. Your entry is confirmed once the organizer marks you paid.
+        </p>
+      )}
+
       {/* Player info */}
       <div style={{ marginBottom:18 }}>
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:10 }}>

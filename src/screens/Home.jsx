@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../supabase.js'
+import { SEASON } from '../data.js'
 import { Btn, Input } from '../components.jsx'
 
 export default function Home({ onNavigate }) {
@@ -44,7 +45,7 @@ export default function Home({ onNavigate }) {
           display:'inline-block', background:'#0d2818', border:'1px solid #16a34a',
           borderRadius:99, padding:'4px 18px', fontSize:11, fontWeight:700,
           color:'#4ade80', letterSpacing:2, marginBottom:24,
-        }}>SEASON 2025</div>
+        }}>SEASON {SEASON}</div>
         <h1 style={{
           fontSize:'clamp(38px,7vw,72px)', fontWeight:900, color:'#f1f5f9',
           lineHeight:1.05, letterSpacing:'-2px', marginBottom:20,

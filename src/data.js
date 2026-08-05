@@ -1,3 +1,6 @@
+// The current NFL season year. Update this once each year.
+export const SEASON = 2026
+
 export const TEAMS = [
   { abbr:'PHI', name:'Philadelphia Eagles',   price:32, conf:'NFC' },
   { abbr:'KC',  name:'Kansas City Chiefs',    price:31, conf:'AFC' },
@@ -151,7 +154,7 @@ export function randCode() {
 
 export async function fetchNFLWins() {
   try {
-    const res = await fetch('https://site.api.espn.com/apis/site/v2/sports/football/nfl/standings?season=2025')
+    const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/standings?season=${SEASON}`)
     if (!res.ok) throw new Error()
     const data = await res.json()
     const wins = {}

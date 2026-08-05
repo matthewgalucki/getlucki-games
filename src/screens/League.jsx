@@ -55,9 +55,9 @@ export default function League({ leagueId, initMeta = {}, onNavigate }) {
     if (data?.length) return // already seeded
 
     await supabase.from('leagues').insert({
-      id: DEMO_ID, name:'Vietri Pick 6 — 2025 Demo', join_code:'VIETRI',
+      id: DEMO_ID, name:'Vietri Pick 6 — Demo', join_code:'VIETRI',
       organizer_name:'Ben Vietri', organizer_password:'vietri2025',
-      is_public:true, budget:120, picks_min:6, picks_max:7, season:2025,
+      is_public:true, budget:120, picks_min:6, picks_max:7, season:2026,
     })
     for (let i = 0; i < VIETRI_ENTRIES.length; i += 10) {
       await supabase.from('entries').upsert(
@@ -114,6 +114,12 @@ export default function League({ leagueId, initMeta = {}, onNavigate }) {
     const { error } = await supabase.from('entries').delete().eq('id', id)
     if (!error) { setEntries(prev => prev.filter(e => e.id !== id)); setToast('Entry removed') }
     else setToast('Delete failed')
+  }
+
+  async function togglePaid(id, paid) {
+    const { error } = await supabase.from('entries').update({ paid }).eq('id', id)
+    if (!error) setEntries(prev => prev.map(e => e.id === id ? { ...e, paid } : e))
+    else setToast('Update failed')
   }
 
   async function manualWinUpdate(updates) {
@@ -205,7 +211,7 @@ export default function League({ leagueId, initMeta = {}, onNavigate }) {
         {tab==='Share'       && <ShareTab league={league} />}
         {tab==='Admin'       && (
           isOrganizer
-            ? <AdminTab entries={entries} wins={wins} prices={prices} league={league} onDelete={deleteEntry} onWinUpdate={manualWinUpdate} onRefresh={refreshWins} refreshing={refreshing} onToast={setToast} />
+            ? <AdminTab entries={entries} wins={wins} prices={prices} league={league} onDelete={deleteEntry} onTogglePaid={togglePaid} onWinUpdate={manualWinUpdate} onRefresh={refreshWins} refreshing={refreshing} onToast={setToast} />
             : (
               <div style={{ maxWidth:360, margin:'60px auto', textAlign:'center' }}>
                 <div style={{ fontSize:48, marginBottom:12 }}>🔐</div>

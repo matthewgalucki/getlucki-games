@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { TEAMS, calcScore, calcSpent, priceColor } from '../data.js'
 import { Btn, Card } from '../components.jsx'
 
-export default function AdminTab({ entries, wins, prices, league, onDelete, onWinUpdate, onRefresh, refreshing, onToast }) {
+export default function AdminTab({ entries, wins, prices, league, onDelete, onTogglePaid, onWinUpdate, onRefresh, refreshing, onToast }) {
   const [view, setView]       = useState('entries')
   const [winEdits, setWinEdits] = useState({})
   const [addName, setAddName] = useState('')
@@ -34,6 +34,26 @@ export default function AdminTab({ entries, wins, prices, league, onDelete, onWi
 
       {view==='entries' && (
         <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+          {league.collect_payment && entries.length > 0 && (() => {
+            const paidCount = entries.filter(e => e.paid).length
+            const fee = parseFloat(league.entry_fee) || 0
+            const collected = paidCount * fee
+            const total = entries.length * fee
+            return (
+              <div style={{ background:'#0d2818', border:'1px solid #16a34a', borderRadius:10, padding:'14px 18px', marginBottom:8, display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:12 }}>
+                <div>
+                  <div style={{ fontSize:12, color:'#4ade80', fontWeight:700, letterSpacing:1, marginBottom:2 }}>💵 PAYMENTS</div>
+                  <div style={{ fontSize:13, color:'#86efac' }}>
+                    {paidCount} of {entries.length} paid{fee > 0 && <> · <strong>${collected}</strong> of ${total} collected</>}
+                  </div>
+                  {league.payment_note && <div style={{ fontSize:12, color:'#64748b', marginTop:3 }}>Pay via: {league.payment_note}</div>}
+                </div>
+                <div style={{ fontFamily:'monospace', fontWeight:900, fontSize:24, color:'#4ade80' }}>
+                  {entries.length ? Math.round(paidCount/entries.length*100) : 0}%
+                </div>
+              </div>
+            )
+          })()}
           {sorted.length===0 && <p style={{ color:'#64748b', textAlign:'center', padding:'40px 0' }}>No entries yet.</p>}
           {sorted.map(entry => (
             <div key={entry.id} style={{
@@ -65,11 +85,25 @@ export default function AdminTab({ entries, wins, prices, league, onDelete, onWi
                   ${calcSpent(entry.picks, prices)} spent · {calcScore(entry.picks, wins)} wins
                 </div>
               </div>
-              <button
-                onClick={() => { if(window.confirm(`Remove ${entry.player_name}?`)) onDelete(entry.id) }}
-                style={{ background:'#1a0505', border:'1px solid #450a0a', borderRadius:7, color:'#f87171', padding:'6px 14px', cursor:'pointer', fontSize:12, fontWeight:700, whiteSpace:'nowrap', fontFamily:'inherit' }}>
-                Remove
-              </button>
+              <div style={{ display:'flex', flexDirection:'column', gap:6, alignItems:'flex-end' }}>
+                {league.collect_payment && (
+                  <button
+                    onClick={() => onTogglePaid(entry.id, !entry.paid)}
+                    style={{
+                      background: entry.paid ? '#14532d' : '#1f1a0a',
+                      border: `1px solid ${entry.paid ? '#16a34a' : '#3f2f0a'}`,
+                      borderRadius:7, color: entry.paid ? '#4ade80' : '#fbbf24',
+                      padding:'6px 14px', cursor:'pointer', fontSize:12, fontWeight:700, whiteSpace:'nowrap', fontFamily:'inherit',
+                    }}>
+                    {entry.paid ? '✓ Paid' : 'Mark paid'}
+                  </button>
+                )}
+                <button
+                  onClick={() => { if(window.confirm(`Remove ${entry.player_name}?`)) onDelete(entry.id) }}
+                  style={{ background:'#1a0505', border:'1px solid #450a0a', borderRadius:7, color:'#f87171', padding:'6px 14px', cursor:'pointer', fontSize:12, fontWeight:700, whiteSpace:'nowrap', fontFamily:'inherit' }}>
+                  Remove
+                </button>
+              </div>
             </div>
           ))}
         </div>
