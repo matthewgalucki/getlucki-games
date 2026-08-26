@@ -233,7 +233,7 @@ export default function DraftTab({ league, entries, prices, played = {}, onSubmi
           transition:'background 0.2s',
         }}>
         {submitting                  ? 'Locking in…'
-         : picks.length < picksMin  ? `Pick ${picksMin - picks.length} more team${picksMin-picks.length!==1?'s':''}`
+                : picks.length < picksMin  ? `Pick ${picksMax - picks.length} more teams`
          : remaining < 0            ? 'Over budget'
          : '✅ Lock In Picks'}
       </button>

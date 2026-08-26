@@ -161,7 +161,7 @@ export default function League({ leagueId, initMeta = {}, onNavigate }) {
   )
 
   const prices = leaguePrices(league)
-  const TABS = ['Leaderboard','Teams','Pick Teams','Share','Admin']
+    const TABS = ['Leaderboard','Pick Teams','Share','Admin','Teams']
 
   return (
     <div style={{ minHeight:'100vh', background:'#060d16' }}>
