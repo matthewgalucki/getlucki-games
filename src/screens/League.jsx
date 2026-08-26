@@ -7,6 +7,7 @@ import TeamsTab    from '../tabs/Teams.jsx'
 import DraftTab    from '../tabs/Draft.jsx'
 import ShareTab    from '../tabs/Share.jsx'
 import AdminTab    from '../tabs/Admin.jsx'
+import WelcomeModal from '../WelcomeModal.jsx'
 
 const DEMO_ID = 'vietri-pick-6-demo'
 
@@ -165,6 +166,17 @@ export default function League({ leagueId, initMeta = {}, onNavigate }) {
   return (
     <div style={{ minHeight:'100vh', background:'#060d16' }}>
       {toast && <Toast msg={toast} onDone={() => setToast('')} />}
+              <WelcomeModal
+        storageKey="getlucki-welcome-league"
+        title="How to Play BankRoll"
+        steps={[
+          "Go to the Pick Teams tab and choose 6–7 NFL teams.",
+          "You have a $120 budget. Stronger teams cost more — balance stars with sleepers.",
+          "Enter your name and email so the organizer can reach you if you win.",
+          "Your teams are locked once they play. Then just watch the Leaderboard all season!",
+        ]}
+        footer="No weekly picks needed — set your roster once and let it ride."
+      />
 
       {/* LEAGUE NAV */}
       <nav style={{ background:'linear-gradient(135deg,#031a0a,#060d16)', borderBottom:'1px solid #0d1f0f', padding:'16px 24px 0' }}>

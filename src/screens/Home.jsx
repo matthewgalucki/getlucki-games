@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { supabase } from '../supabase.js'
 import { SEASON } from '../data.js'
 import { Btn, Input } from '../components.jsx'
+import WelcomeModal from '../WelcomeModal.jsx'
 
 export default function Home({ onNavigate }) {
   const [code, setCode]     = useState('')
@@ -27,6 +28,17 @@ export default function Home({ onNavigate }) {
 
   return (
     <div style={{ minHeight:'100vh', background:'#060d16' }}>
+            <WelcomeModal
+        storageKey="getlucki-welcome-home"
+        title="Welcome to Getlucki Games"
+        steps={[
+          "BankRoll is a season-long NFL pool. Pick your teams once before Week 1 — no weekly upkeep.",
+          "You get a $120 budget. Better teams cost more ($1–$32), so spend wisely and hunt for sleepers.",
+          "Got a join code from your organizer? Enter it above to jump into your league.",
+          "Most total team wins at the end of the regular season takes it. Good luck!",
+        ]}
+        footer="Your picks lock once a team plays its first game. Set it and forget it."
+      />
       {/* NAV */}
       <nav style={{ padding:'18px 28px', display:'flex', alignItems:'center', justifyContent:'space-between', borderBottom:'1px solid #0d1f0f' }}>
         <div style={{ display:'flex', alignItems:'center', gap:10 }}>
