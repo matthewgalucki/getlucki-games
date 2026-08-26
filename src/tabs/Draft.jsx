@@ -222,7 +222,24 @@ export default function DraftTab({ league, entries, prices, played = {}, onSubmi
       </div>
 
       {error && <p style={{ color:'#f87171', fontSize:13, marginBottom:12 }}>{error}</p>}
-
+      {/* Floating budget tracker — mobile-friendly, follows scroll */}
+      <div style={{
+        position:'fixed', left:'50%', bottom:16, transform:'translateX(-50%)',
+        zIndex:900, background:'rgba(12,20,33,0.95)', backdropFilter:'blur(8px)',
+        border:`1px solid ${remaining<0?'#ef4444':'#16a34a'}`, borderRadius:99,
+        padding:'10px 20px', display:'flex', gap:18, alignItems:'center',
+        boxShadow:'0 8px 32px rgba(0,0,0,0.5)', whiteSpace:'nowrap',
+      }}>
+        <div style={{ display:'flex', alignItems:'baseline', gap:6 }}>
+          <span style={{ fontSize:10, color:'#94a3b8', fontWeight:700 }}>LEFT</span>
+          <span style={{ fontFamily:'monospace', fontWeight:900, fontSize:18, color:remaining<0?'#ef4444':remaining<15?'#fbbf24':'#4ade80' }}>${remaining}</span>
+        </div>
+        <div style={{ width:1, height:20, background:'#1e2d3d' }} />
+        <div style={{ display:'flex', alignItems:'baseline', gap:6 }}>
+          <span style={{ fontSize:10, color:'#94a3b8', fontWeight:700 }}>PICKS</span>
+          <span style={{ fontFamily:'monospace', fontWeight:900, fontSize:18, color:'#f1f5f9' }}>{picks.length}<span style={{ fontSize:12, color:'#64748b' }}>/{picksMax}</span></span>
+        </div>
+      </div>
       <button onClick={submit} disabled={submitting || picks.length < picksMin || remaining < 0}
         style={{
           width:'100%', borderRadius:12, padding:'14px',
