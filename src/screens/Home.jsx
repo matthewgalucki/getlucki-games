@@ -118,7 +118,7 @@ export default function Home({ onNavigate }) {
               ⚡ Set it and forget it — pick once, let it ride all season.
             </p>
             <p style={{ color:'#64748b', fontSize:13, lineHeight:1.6, margin:'0 0 18px' }}>
-              Pick 6–7 NFL teams on a $120 budget before Week 1. No weekly picks, no upkeep — cheaper teams are sleepers, most total wins takes the season.
+              Pick up to 7 NFL teams on a $120 budget before Week 1. No weekly picks, no upkeep — cheaper teams are sleepers, most total wins takes the season.
             </p>
             <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
               {['Pick once','No weekly upkeep','Live win sync'].map(tag => (
