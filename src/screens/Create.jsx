@@ -7,7 +7,7 @@ import RankingEditor from '../RankingEditor.jsx'
 export default function Create({ onNavigate }) {
   const [form, setForm] = useState({
     name:'', organizer:'', password:'', confirmPassword:'',
-    join_code:'', is_public:true, budget:120, picks_min:6, picks_max:7,
+    join_code:'', is_public:true, budget:120, picks_min:5, picks_max:7,
     collect_payment:false, entry_fee:'', payment_note:'',
   })
   const [loading, setLoading]     = useState(false)
