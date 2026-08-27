@@ -96,7 +96,7 @@ export default function DraftTab({ league, entries, prices, played = {}, onSubmi
     <div>
       <h2 style={{ color:'#f1f5f9', fontSize:22, fontWeight:900, marginBottom:6 }}>📝 Pick Your Teams</h2>
       <p style={{ color:'#94a3b8', fontSize:13, marginBottom:8 }}>
-        Pick {picksMin}–{picksMax} teams within your ${budget} budget. Lower cost = bigger upset potential.
+        Pick up to {picksMax} teams within your ${budget} budget. Lower cost = bigger upset potential.
       </p>
       <p style={{ color:'#fbbf24', fontSize:12, marginBottom:22, background:'#1f1a0a', border:'1px solid #3f2f0a', borderRadius:8, padding:'8px 12px' }}>
         🔒 Once a team plays its first game of the season, it locks and can no longer be picked.
