@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { TEAMS, calcScore, calcSpent, priceColor } from '../data.js'
 import { Medal, Btn } from '../components.jsx'
 
-export default function Leaderboard({ entries, wins, prices, lastResults = {}, lastSynced, onRefresh, refreshing }) {
+export default function Leaderboard({ entries, wins, prices, lastResults = {}, lastSynced, revealed = true, onRefresh, refreshing }) {
   const [expanded, setExpanded] = useState(null)
   const [view, setView] = useState('all')
 
@@ -44,6 +44,13 @@ export default function Leaderboard({ entries, wins, prices, lastResults = {}, l
           </Btn>
         </div>
       </div>
+
+      {/* Picks-hidden banner */}
+      {!revealed && (
+        <div style={{ background:'#1f1a0a', border:'1px solid #3f2f0a', borderRadius:10, padding:'10px 14px', marginBottom:14, color:'#fbbf24', fontSize:13, display:'flex', alignItems:'center', gap:8 }}>
+          🔒 Everyone's picks are hidden until the organizer reveals them. Wins still count — you just can't see which teams others chose yet.
+        </div>
+      )}
 
       {/* Column headers */}
       <div style={{ display:'grid', gridTemplateColumns:'38px 1fr 60px 54px 58px 20px', gap:4, padding:'6px 14px', color:'#64748b', fontSize:11, fontWeight:700, letterSpacing:0.5, marginBottom:6 }}>
@@ -93,21 +100,29 @@ export default function Leaderboard({ entries, wins, prices, lastResults = {}, l
 
               {isOpen && (
                 <div style={{ borderTop:'1px solid #111827', padding:'12px 16px', background:'#060d16' }}>
-                  <div style={{ display:'flex', flexWrap:'wrap', gap:8, marginBottom:10 }}>
-                    {entry.picks.map(abbr => {
-                      const price = prices[abbr] || 0
-                      const w = wins[abbr] || 0
-                      return (
-                        <div key={abbr} style={{ background:'#0c1421', border:'1px solid #1a2332', borderRadius:8, padding:'8px 12px', textAlign:'center', minWidth:60 }}>
-                          <div style={{ fontFamily:'monospace', fontWeight:800, fontSize:14, color:'#e2e8f0' }}>{abbr}</div>
-                          <div style={{ fontSize:10, color:priceColor(price), fontWeight:700, margin:'2px 0' }}>${price}</div>
-                          <div style={{ fontSize:14, fontFamily:'monospace', fontWeight:900, color:w>0?'#4ade80':'#374151' }}>{w}W</div>
-                        </div>
-                      )
-                    })}
-                  </div>
+                  {!revealed ? (
+                    <div style={{ color:'#64748b', fontSize:13, padding:'8px 0', display:'flex', alignItems:'center', gap:8 }}>
+                      🔒 Picks are hidden until the organizer reveals them.
+                    </div>
+                  ) : (
+                    <div style={{ display:'flex', flexWrap:'wrap', gap:8, marginBottom:10 }}>
+                      {entry.picks.map(abbr => {
+                        const price = prices[abbr] || 0
+                        const w = wins[abbr] || 0
+                        return (
+                          <div key={abbr} style={{ background:'#0c1421', border:'1px solid #1a2332', borderRadius:8, padding:'8px 12px', textAlign:'center', minWidth:60 }}>
+                            <div style={{ fontFamily:'monospace', fontWeight:800, fontSize:14, color:'#e2e8f0' }}>{abbr}</div>
+                            <div style={{ fontSize:10, color:priceColor(price), fontWeight:700, margin:'2px 0' }}>${price}</div>
+                            <div style={{ fontSize:14, fontFamily:'monospace', fontWeight:900, color:w>0?'#4ade80':'#374151' }}>{w}W</div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
                   <div style={{ fontSize:11, color:'#64748b' }}>
-                    Budget: ${entry.spent} · Score: {entry.score} wins · {cpw !== '—' ? `$${cpw}/win` : 'No wins yet'}
+                    {revealed
+                      ? <>Budget: ${entry.spent} · Score: {entry.score} wins · {cpw !== '—' ? `$${cpw}/win` : 'No wins yet'}</>
+                      : <>Score: {entry.score} wins</>}
                   </div>
                 </div>
               )}

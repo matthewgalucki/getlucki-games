@@ -126,6 +126,11 @@ export default function League({ leagueId, initMeta = {}, onNavigate }) {
     const { error } = await supabase.from('entries').update({ paid }).eq('id', id)
     if (!error) setEntries(prev => prev.map(e => e.id === id ? { ...e, paid } : e))
     else setToast('Update failed')
+  }  async function toggleReveal() {
+    const next = !league.picks_revealed
+    const { error } = await supabase.from('leagues').update({ picks_revealed: next }).eq('id', leagueId)
+    if (!error) { setLeague({ ...league, picks_revealed: next }); setToast(next ? 'Picks revealed to everyone ✓' : 'Picks hidden again') }
+    else setToast('Update failed')
   }
 
   async function manualWinUpdate(updates) {
@@ -222,13 +227,13 @@ export default function League({ leagueId, initMeta = {}, onNavigate }) {
 
       {/* CONTENT */}
       <div style={{ maxWidth:960, margin:'0 auto', padding:'28px 20px 80px' }}>
-        {tab==='Leaderboard' && <Leaderboard entries={entries} wins={wins} prices={prices} lastResults={lastResults} lastSynced={lastSynced} onRefresh={refreshWins} refreshing={refreshing} />}
+                {tab==='Leaderboard' && <Leaderboard entries={entries} wins={wins} prices={prices} lastResults={lastResults} lastSynced={lastSynced} revealed={league.picks_revealed} onRefresh={refreshWins} refreshing={refreshing} />}
         {tab==='Teams'       && <TeamsTab wins={wins} entries={entries} prices={prices} />}
         {tab==='Pick Teams' && <DraftTab league={league} entries={entries} prices={prices} played={played} onSubmit={submitEntry} onToast={setToast} />}
         {tab==='Share'       && <ShareTab league={league} />}
         {tab==='Admin'       && (
           isOrganizer
-            ? <AdminTab entries={entries} wins={wins} prices={prices} league={league} onDelete={deleteEntry} onTogglePaid={togglePaid} onWinUpdate={manualWinUpdate} onRefresh={refreshWins} refreshing={refreshing} onToast={setToast} />
+                        ? <AdminTab entries={entries} wins={wins} prices={prices} league={league} onDelete={deleteEntry} onTogglePaid={togglePaid} onToggleReveal={toggleReveal} onWinUpdate={manualWinUpdate} onRefresh={refreshWins} refreshing={refreshing} onToast={setToast} />
             : (
               <div style={{ maxWidth:360, margin:'60px auto', textAlign:'center' }}>
                 <div style={{ fontSize:48, marginBottom:12 }}>🔐</div>

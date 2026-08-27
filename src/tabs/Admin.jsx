@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { TEAMS, calcScore, calcSpent, priceColor } from '../data.js'
 import { Btn, Card } from '../components.jsx'
 
-export default function AdminTab({ entries, wins, prices, league, onDelete, onTogglePaid, onWinUpdate, onRefresh, refreshing, onToast }) {
+export default function AdminTab({ entries, wins, prices, league, onDelete, onTogglePaid, onToggleReveal, onWinUpdate, onRefresh, refreshing, onToast }) {
   const [view, setView]       = useState('entries')
   const [winEdits, setWinEdits] = useState({})
 
@@ -71,6 +71,8 @@ export default function AdminTab({ entries, wins, prices, league, onDelete, onTo
     navigator.clipboard.writeText(emails).then(() => onToast('Email list copied ✓'))
   }
 
+  const revealed = !!league.picks_revealed
+
   return (
     <div>
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:24 }}>
@@ -87,6 +89,35 @@ export default function AdminTab({ entries, wins, prices, league, onDelete, onTo
 
       {view==='entries' && (
         <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+          {/* Reveal picks control */}
+          <div style={{
+            display:'flex', justifyContent:'space-between', alignItems:'center', gap:14, flexWrap:'wrap',
+            marginBottom:10, padding:'14px 18px',
+            background: revealed ? '#0d2818' : '#1f1a0a',
+            border: `1px solid ${revealed ? '#16a34a' : '#3f2f0a'}`, borderRadius:10,
+          }}>
+            <div>
+              <div style={{ fontSize:14, fontWeight:800, color: revealed ? '#4ade80' : '#fbbf24', marginBottom:2 }}>
+                {revealed ? '👁️ Picks are visible to everyone' : '🔒 Picks are hidden'}
+              </div>
+              <div style={{ fontSize:12, color:'#94a3b8', maxWidth:420 }}>
+                {revealed
+                  ? 'All players can see which teams everyone picked. Turn off to hide them again.'
+                  : "Players see names and win totals, but not which teams others chose. Reveal once everyone's locked in (e.g. at kickoff)."}
+              </div>
+            </div>
+            <button
+              onClick={onToggleReveal}
+              style={{
+                background: revealed ? '#1a0505' : '#16a34a',
+                border: `1px solid ${revealed ? '#450a0a' : '#16a34a'}`,
+                borderRadius:9, color:'#fff', padding:'10px 18px', cursor:'pointer',
+                fontSize:13, fontWeight:800, whiteSpace:'nowrap', fontFamily:'inherit',
+              }}>
+              {revealed ? 'Hide picks again' : '👁️ Reveal all picks'}
+            </button>
+          </div>
+
           {/* Export toolbar */}
           {entries.length > 0 && (
             <div style={{ display:'flex', gap:8, flexWrap:'wrap', marginBottom:10, padding:'12px 14px', background:'#0a0f18', border:'1px solid #111827', borderRadius:10 }}>
