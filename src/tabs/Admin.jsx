@@ -80,7 +80,7 @@ export default function AdminTab({ entries, wins, prices, league, onDelete, onTo
       .map(([abbr, count]) => ({ abbr, count, pct: Math.round(count / n * 100) }))
       .sort((a, b) => b.count - a.count)
 
-    const mostPopular = ranked.filter(t => t.count > 0).slice(0, 5)
+     const mostPopular = ranked.filter(t => t.count > 0)
     const neverPicked = ranked.filter(t => t.count === 0).map(t => t.abbr)
 
     const spends = entries.map(e => calcSpent(e.picks, prices))
@@ -119,7 +119,7 @@ export default function AdminTab({ entries, wins, prices, league, onDelete, onTo
     const lines = []
     lines.push(`${league.name} — League Insights`)
     lines.push(`${ins.n} entries in the pool\n`)
-    lines.push(`MOST POPULAR PICKS:`)
+       lines.push(`PICK POPULARITY (most to least):`)
     ins.mostPopular.forEach(t => lines.push(`  ${t.abbr} — picked by ${t.count} (${t.pct}%)`))
     if (ins.neverPicked.length) lines.push(`\nNOBODY PICKED: ${ins.neverPicked.join(', ')}`)
     lines.push(`\nAverage spend: $${ins.avgSpend} of $${league.budget || 120}`)
@@ -284,8 +284,7 @@ export default function AdminTab({ entries, wins, prices, league, onDelete, onTo
               </div>
 
               <div style={{ background:'#0a0f18', border:'1px solid #111827', borderRadius:12, padding:'16px 18px' }}>
-                <div style={{ fontSize:12, color:'#4ade80', fontWeight:800, letterSpacing:1, marginBottom:12 }}>🔥 MOST POPULAR PICKS</div>
-                <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                <div style={{ fontSize:12, color:'#4ade80', fontWeight:800, letterSpacing:1, marginBottom:12 }}>🔥 PICK POPULARITY — MOST TO LEAST</div>                <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
                   {insights.mostPopular.map(t => (
                     <div key={t.abbr} style={{ display:'flex', alignItems:'center', gap:10 }}>
                       <span style={{ fontFamily:'monospace', fontWeight:800, color:'#e2e8f0', width:44 }}>{t.abbr}</span>
