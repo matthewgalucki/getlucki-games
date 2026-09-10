@@ -167,8 +167,9 @@ export async function fetchNFLWins() {
       if (!comp) return
       if (comp.status?.type?.completed !== true) return
       ;(comp.competitors || []).forEach(c => {
-        const abbr = c.team?.abbreviation
+        let abbr = c.team?.abbreviation
         if (!abbr) return
+        if (abbr === 'WSH') abbr = 'WAS'  // ESPN uses WSH, our app uses WAS
         played[abbr] = (played[abbr] || 0) + 1
         if (!(abbr in wins)) wins[abbr] = 0
         if (c.winner === true) wins[abbr] += 1
