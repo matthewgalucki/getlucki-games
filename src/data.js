@@ -185,3 +185,31 @@ export async function fetchNFLWins() {
     return null
   }
 }
+  
+export async function fetchLastResults() {
+  const results = {}
+  try {
+    for (let week = 1; week <= 18; week++) {
+      const url = `https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype=2&week=${week}&dates=${SEASON}`
+      const res = await fetch(url)
+      if (!res.ok) continue
+      const data = await res.json()
+      ;(data.events || []).forEach(event => {
+        if (event.season?.year !== SEASON) return
+        if (event.season?.type !== 2) return
+        const comp = event.competitions?.[0]
+        if (!comp || comp.status?.type?.completed !== true) return
+        ;(comp.competitors || []).forEach(c => {
+          let abbr = c.team?.abbreviation
+          if (!abbr) return
+          if (abbr === 'WSH') abbr = 'WAS'
+          results[abbr] = c.winner === true ? 'W' : 'L'
+        })
+      })
+    }
+    return results
+  } catch (e) {
+    console.error('fetchLastResults ERROR:', e)
+    return {}
+  }
+}
