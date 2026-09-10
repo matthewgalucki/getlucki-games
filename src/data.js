@@ -153,58 +153,35 @@ export function randCode() {
 }
 
 export async function fetchNFLWins() {
+  const wins = {}
+  const played = {}
   try {
-    const url = `https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=${SEASON}&seasontype=2&limit=1000`
-    console.log('Fetching wins from:', url)
-    const res = await fetch(url)
-    console.log('Response status:', res.status)
-    if (!res.ok) throw new Error('status ' + res.status)
-    const data = await res.json()
-    console.log('Got events:', data.events?.length)
-    const wins = {}
-    const played = {}
-    ;(data.events || []).forEach(event => {
-      const comp = event.competitions?.[0]
-      if (!comp || comp.status?.type?.completed !== true) return
-      ;(comp.competitors || []).forEach(c => {
-        let abbr = c.team?.abbreviation
-        if (!abbr) return
-        if (abbr === 'WSH') abbr = 'WAS'
-        played[abbr] = (played[abbr] || 0) + 1
-        if (!(abbr in wins)) wins[abbr] = 0
-        if (c.winner === true) wins[abbr] += 1
+    // Pull each regular-season week individually — clean, current-season data only
+    for (let week = 1; week <= 18; week++) {
+      const url = `https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype=2&week=${week}&dates=${SEASON}`
+      const res = await fetch(url)
+      if (!res.ok) continue
+      const data = await res.json()
+      ;(data.events || []).forEach(event => {
+        // Only count regular-season games from the current season
+        if (event.season?.year !== SEASON) return
+        if (event.season?.type !== 2) return
+        const comp = event.competitions?.[0]
+        if (!comp || comp.status?.type?.completed !== true) return
+        ;(comp.competitors || []).forEach(c => {
+          let abbr = c.team?.abbreviation
+          if (!abbr) return
+          if (abbr === 'WSH') abbr = 'WAS'
+          played[abbr] = (played[abbr] || 0) + 1
+          if (!(abbr in wins)) wins[abbr] = 0
+          if (c.winner === true) wins[abbr] += 1
+        })
       })
-    })
+    }
     console.log('Computed wins:', wins, 'played:', played)
     return Object.keys(played).length > 0 ? { wins, played } : null
   } catch (e) {
     console.error('fetchNFLWins ERROR:', e)
     return null
-  }
-}
-// Fetch each team's most-recent completed game result (W or L).
-// Powers the "perfect week" badge on the leaderboard.
-export async function fetchLastResults() {
-  try {
-    const url = `https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=${SEASON}&seasontype=2&limit=1000`
-    const res = await fetch(url)
-    if (!res.ok) throw new Error('status ' + res.status)
-    const data = await res.json()
-    // Walk games in order; the last completed game for each team wins the slot
-    const results = {}
-    ;(data.events || []).forEach(event => {
-      const comp = event.competitions?.[0]
-      if (!comp || comp.status?.type?.completed !== true) return
-      ;(comp.competitors || []).forEach(c => {
-        let abbr = c.team?.abbreviation
-        if (!abbr) return
-        if (abbr === 'WSH') abbr = 'WAS'
-        results[abbr] = c.winner === true ? 'W' : 'L'
-      })
-    })
-    return results
-  } catch (e) {
-    console.error('fetchLastResults ERROR:', e)
-    return {}
   }
 }
