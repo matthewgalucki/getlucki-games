@@ -153,30 +153,32 @@ export function randCode() {
 }
 
 export async function fetchNFLWins() {
-  // ESPN's standings endpoint has been unreliable (often returns empty),
-  // so we build win totals from the scoreboard, which lists completed games.
   try {
     const url = `https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=${SEASON}&seasontype=2&limit=1000`
+    console.log('Fetching wins from:', url)
     const res = await fetch(url)
+    console.log('Response status:', res.status)
     if (!res.ok) throw new Error('status ' + res.status)
     const data = await res.json()
+    console.log('Got events:', data.events?.length)
     const wins = {}
     const played = {}
     ;(data.events || []).forEach(event => {
       const comp = event.competitions?.[0]
-      if (!comp) return
-      if (comp.status?.type?.completed !== true) return
+      if (!comp || comp.status?.type?.completed !== true) return
       ;(comp.competitors || []).forEach(c => {
         let abbr = c.team?.abbreviation
         if (!abbr) return
-        if (abbr === 'WSH') abbr = 'WAS'  // ESPN uses WSH, our app uses WAS
+        if (abbr === 'WSH') abbr = 'WAS'
         played[abbr] = (played[abbr] || 0) + 1
         if (!(abbr in wins)) wins[abbr] = 0
         if (c.winner === true) wins[abbr] += 1
       })
     })
+    console.log('Computed wins:', wins, 'played:', played)
     return Object.keys(played).length > 0 ? { wins, played } : null
-  } catch {
+  } catch (e) {
+    console.error('fetchNFLWins ERROR:', e)
     return null
   }
 }
