@@ -153,53 +153,28 @@ export function randCode() {
 }
 
 export async function fetchNFLWins() {
+  // ESPN's standings endpoint has been unreliable (often returns empty),
+  // so we build win totals from the scoreboard, which lists completed games.
   try {
-    const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/standings?season=${SEASON}`)
-    if (!res.ok) throw new Error()
+    const url = `https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=${SEASON}&seasontype=2&limit=1000`
+    const res = await fetch(url)
+    if (!res.ok) throw new Error('status ' + res.status)
     const data = await res.json()
     const wins = {}
     const played = {}
-    ;(data.children || []).forEach(conf => {
-      ;(conf.standings?.entries || []).forEach(entry => {
-        const abbr = entry.team?.abbreviation
-        const stats = entry.stats || []
-        const w = stats.find(s => s.name === 'wins')
-        const l = stats.find(s => s.name === 'losses')
-        const t = stats.find(s => s.name === 'ties')
-        if (abbr) {
-          if (w) wins[abbr] = parseInt(w.value, 10) || 0
-          const gp = (parseInt(w?.value,10)||0) + (parseInt(l?.value,10)||0) + (parseInt(t?.value,10)||0)
-          played[abbr] = gp
-        }
-      })
-    })
-    return Object.keys(wins).length > 0 ? { wins, played } : null
-  } catch {
-    return null
-  }
-}
-
-// Fetch each team's most-recent completed game result.
-// Returns { KC: 'W', BUF: 'L', ... } — the outcome of that team's latest finished game.
-// Used for the "perfect week" shoutout on the leaderboard.
-export async function fetchLastResults() {
-  try {
-    const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard`)
-    if (!res.ok) throw new Error()
-    const data = await res.json()
-    const results = {}
     ;(data.events || []).forEach(event => {
       const comp = event.competitions?.[0]
-      if (!comp || comp.status?.type?.completed !== true) return
+      if (!comp) return
+      if (comp.status?.type?.completed !== true) return
       ;(comp.competitors || []).forEach(c => {
         const abbr = c.team?.abbreviation
         if (!abbr) return
-        // 'winner' boolean is provided on completed games
-        if (c.winner === true) results[abbr] = 'W'
-        else if (c.winner === false) results[abbr] = 'L'
+        played[abbr] = (played[abbr] || 0) + 1
+        if (!(abbr in wins)) wins[abbr] = 0
+        if (c.winner === true) wins[abbr] += 1
       })
     })
-    return Object.keys(results).length > 0 ? results : null
+    return Object.keys(played).length > 0 ? { wins, played } : null
   } catch {
     return null
   }
