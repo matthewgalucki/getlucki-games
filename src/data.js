@@ -182,3 +182,29 @@ export async function fetchNFLWins() {
     return null
   }
 }
+// Fetch each team's most-recent completed game result (W or L).
+// Powers the "perfect week" badge on the leaderboard.
+export async function fetchLastResults() {
+  try {
+    const url = `https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?dates=${SEASON}&seasontype=2&limit=1000`
+    const res = await fetch(url)
+    if (!res.ok) throw new Error('status ' + res.status)
+    const data = await res.json()
+    // Walk games in order; the last completed game for each team wins the slot
+    const results = {}
+    ;(data.events || []).forEach(event => {
+      const comp = event.competitions?.[0]
+      if (!comp || comp.status?.type?.completed !== true) return
+      ;(comp.competitors || []).forEach(c => {
+        let abbr = c.team?.abbreviation
+        if (!abbr) return
+        if (abbr === 'WSH') abbr = 'WAS'
+        results[abbr] = c.winner === true ? 'W' : 'L'
+      })
+    })
+    return results
+  } catch (e) {
+    console.error('fetchLastResults ERROR:', e)
+    return {}
+  }
+}
