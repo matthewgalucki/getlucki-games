@@ -2,12 +2,11 @@ import { useState } from 'react'
 import { TEAMS, calcScore, calcSpent, priceColor } from '../data.js'
 import { Medal, Btn } from '../components.jsx'
 
-export default function Leaderboard({ entries, wins, prices, lastResults = {}, lastSynced, revealed = true, onRefresh, refreshing }) {
+export default function Leaderboard({ entries, wins, prices, played = {}, lastResults = {}, lastSynced, revealed = true, onRefresh, refreshing }) {
   const [expanded, setExpanded] = useState(null)
   const [view, setView] = useState('all')
+  const [showInsights, setShowInsights] = useState(false)
 
-  // A player has a "perfect week" if every one of their teams that has a
-  // recorded most-recent result WON it, and at least one team has a result.
   function perfectWeek(picks) {
     const withResults = picks.filter(a => lastResults[a] === 'W' || lastResults[a] === 'L')
     if (withResults.length === 0) return false
@@ -19,6 +18,53 @@ export default function Leaderboard({ entries, wins, prices, lastResults = {}, l
     .sort((a, b) => b.score - a.score || a.spent - b.spent)
 
   const displayed = view === 'top10' ? ranked.slice(0, 10) : ranked
+
+  // ---- League Insights (aggregate, team-level — safe before reveal) ----
+  function buildInsights() {
+    const n = entries.length
+    if (n === 0) return null
+
+    // How many entries picked each team
+    const pickCount = {}
+    TEAMS.forEach(t => { pickCount[t.abbr] = 0 })
+    entries.forEach(e => e.picks.forEach(a => { if (pickCount[a] != null) pickCount[a]++ }))
+
+    const popularity = Object.entries(pickCount)
+      .map(([abbr, count]) => ({ abbr, count, pct: Math.round(count / n * 100) }))
+      .sort((a, b) => b.count - a.count)
+
+    const mostPopular = popularity.filter(t => t.count > 0).slice(0, 5)
+    const leastPopular = popularity.filter(t => t.count > 0).slice(-5).reverse()
+    const neverPicked = popularity.filter(t => t.count === 0).map(t => t.abbr)
+
+    // Best value so far: wins per dollar (only teams with a price and a win)
+    const value = TEAMS
+      .map(t => {
+        const w = wins[t.abbr] || 0
+        const price = prices[t.abbr] || t.price || 0
+        return { abbr: t.abbr, wins: w, price, ratio: price > 0 ? w / price : 0 }
+      })
+      .filter(t => t.wins > 0)
+      .sort((a, b) => b.ratio - a.ratio)
+      .slice(0, 5)
+
+    // Projected final wins per team: extrapolate current pace over 17 games
+    const GAMES = 17
+    const projected = TEAMS
+      .map(t => {
+        const gp = played[t.abbr] || 0
+        const w = wins[t.abbr] || 0
+        const proj = gp > 0 ? Math.round((w / gp) * GAMES) : null
+        return { abbr: t.abbr, wins: w, played: gp, proj }
+      })
+      .filter(t => t.proj != null)
+      .sort((a, b) => b.proj - a.proj)
+      .slice(0, 8)
+
+    return { n, mostPopular, leastPopular, neverPicked, value, projected }
+  }
+
+  const insights = showInsights ? buildInsights() : null
 
   return (
     <div>
@@ -137,6 +183,99 @@ export default function Leaderboard({ entries, wins, prices, lastResults = {}, l
           </div>
         )}
       </div>
+
+      {/* ---- League Insights (collapsible) ---- */}
+      {entries.length > 0 && (
+        <div style={{ marginTop:20 }}>
+          <button onClick={() => setShowInsights(s => !s)} style={{
+            width:'100%', background:'#0a0f18', border:'1px solid #1a2332', borderRadius:10,
+            padding:'13px 16px', cursor:'pointer', color:'#f1f5f9', fontWeight:800, fontSize:14,
+            display:'flex', justifyContent:'space-between', alignItems:'center', fontFamily:'inherit',
+          }}>
+            <span>📊 League Insights</span>
+            <span style={{ color:'#64748b', fontSize:12 }}>{showInsights ? '▲ Hide' : '▼ Show'}</span>
+          </button>
+
+          {insights && (
+            <div style={{ display:'flex', flexDirection:'column', gap:12, marginTop:12 }}>
+              {/* Most popular */}
+              <div style={{ background:'#0a0f18', border:'1px solid #111827', borderRadius:12, padding:'16px 18px' }}>
+                <div style={{ fontSize:12, color:'#4ade80', fontWeight:800, letterSpacing:1, marginBottom:12 }}>🔥 MOST POPULAR PICKS</div>
+                <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                  {insights.mostPopular.map(t => (
+                    <div key={t.abbr} style={{ display:'flex', alignItems:'center', gap:10 }}>
+                      <span style={{ fontFamily:'monospace', fontWeight:800, color:'#e2e8f0', width:44 }}>{t.abbr}</span>
+                      <div style={{ flex:1, background:'#0c1421', borderRadius:99, height:16, overflow:'hidden' }}>
+                        <div style={{ width:`${t.pct}%`, height:'100%', background:'linear-gradient(90deg,#16a34a,#4ade80)', borderRadius:99 }} />
+                      </div>
+                      <span style={{ fontFamily:'monospace', fontSize:12, color:'#94a3b8', width:70, textAlign:'right' }}>{t.count} ({t.pct}%)</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Least popular */}
+              <div style={{ background:'#0a0f18', border:'1px solid #111827', borderRadius:12, padding:'16px 18px' }}>
+                <div style={{ fontSize:12, color:'#93c5fd', fontWeight:800, letterSpacing:1, marginBottom:12 }}>🧊 LEAST POPULAR (but picked)</div>
+                <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+                  {insights.leastPopular.map(t => (
+                    <span key={t.abbr} style={{ fontFamily:'monospace', fontWeight:700, fontSize:12, color:'#94a3b8', background:'#0c1421', border:'1px solid #1a2332', borderRadius:5, padding:'3px 9px' }}>
+                      {t.abbr} · {t.count}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Best value */}
+              <div style={{ background:'#0a0f18', border:'1px solid #111827', borderRadius:12, padding:'16px 18px' }}>
+                <div style={{ fontSize:12, color:'#fbbf24', fontWeight:800, letterSpacing:1, marginBottom:12 }}>💎 BEST VALUE SO FAR</div>
+                {insights.value.length === 0 ? (
+                  <div style={{ color:'#64748b', fontSize:13 }}>No wins yet — check back after games are played.</div>
+                ) : (
+                  <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                    {insights.value.map(t => (
+                      <div key={t.abbr} style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}>
+                        <span style={{ fontFamily:'monospace', fontWeight:800, color:'#e2e8f0' }}>{t.abbr}</span>
+                        <span style={{ color:'#94a3b8' }}>{t.wins}W at ${t.price}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Projected wins */}
+              <div style={{ background:'#0a0f18', border:'1px solid #111827', borderRadius:12, padding:'16px 18px' }}>
+                <div style={{ fontSize:12, color:'#4ade80', fontWeight:800, letterSpacing:1, marginBottom:4 }}>📈 PROJECTED FINAL WINS</div>
+                <div style={{ fontSize:11, color:'#64748b', marginBottom:12 }}>Based on current pace over a 17-game season</div>
+                {insights.projected.length === 0 ? (
+                  <div style={{ color:'#64748b', fontSize:13 }}>No games played yet.</div>
+                ) : (
+                  <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                    {insights.projected.map(t => (
+                      <div key={t.abbr} style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}>
+                        <span style={{ fontFamily:'monospace', fontWeight:800, color:'#e2e8f0' }}>{t.abbr}</span>
+                        <span style={{ color:'#94a3b8' }}>~{t.proj} wins <span style={{ color:'#64748b' }}>({t.wins}W in {t.played})</span></span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Nobody picked */}
+              {insights.neverPicked.length > 0 && (
+                <div style={{ background:'#1a0505', border:'1px solid #450a0a', borderRadius:12, padding:'16px 18px' }}>
+                  <div style={{ fontSize:12, color:'#f87171', fontWeight:800, letterSpacing:1, marginBottom:8 }}>❄️ NOBODY PICKED</div>
+                  <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+                    {insights.neverPicked.map(abbr => (
+                      <span key={abbr} style={{ fontFamily:'monospace', fontWeight:700, fontSize:12, color:'#94a3b8', background:'#0c1421', border:'1px solid #1a2332', borderRadius:5, padding:'3px 9px' }}>{abbr}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
